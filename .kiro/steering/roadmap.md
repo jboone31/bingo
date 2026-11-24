@@ -1,3 +1,9 @@
+---
+inclusion: auto
+name: roadmap
+description: The ordered feature list (F0 to F11) with scope, dependencies, status and open questions for each feature. Use when starting, planning or speccing a feature, or when checking what is built or what comes next.
+---
+
 # Roadmap
 
 Features in dependency order. Each one becomes its own spec (requirements, design,
@@ -6,6 +12,18 @@ needs. It does not say how to build it.
 
 Behavior rules live in `draft-rules.md`. Update the status column as specs are
 written and features ship.
+
+## Starting A Feature
+
+1. Read the feature's section below and the features it depends on.
+2. Resolve that feature's **Open** questions with the user before writing
+   requirements. Record each answer in the spec, and in `draft-rules.md` or
+   `product.md` if it changes a rule.
+3. Follow `conventions.md` for access, database, routes and testing. For timers,
+   realtime or the event log, also read `reference-bbb.md`.
+4. Create the spec at `.kiro/specs/<feature-name>/`.
+5. When the feature ships, set its status here and update `structure.md` if the
+   layout changed.
 
 | #   | Feature                         | Depends on     | Status      |
 | --- | ------------------------------- | -------------- | ----------- |
