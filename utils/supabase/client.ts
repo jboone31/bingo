@@ -1,10 +1,9 @@
 import { createBrowserClient } from "@supabase/ssr";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+import { getPublicEnv } from "@/lib/env";
 
-export const createClient = () =>
-  createBrowserClient(
-    supabaseUrl!,
-    supabaseKey!,
-  );
+/** Browser Supabase client (RLS-scoped reads and Realtime subscriptions). */
+export const createClient = () => {
+  const { supabaseUrl, supabaseKey } = getPublicEnv();
+  return createBrowserClient(supabaseUrl, supabaseKey);
+};

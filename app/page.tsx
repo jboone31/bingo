@@ -1,17 +1,8 @@
-import { createClient } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
-
-export default async function Page() {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-
-  const { data: todos } = await supabase.from('todos').select()
-
+export default function Home() {
   return (
-    <ul>
-      {todos?.map((todo) => (
-        <li key={todo.id}>{todo.name}</li>
-      ))}
-    </ul>
-  )
+    <main>
+      <h1>Bingo Draft</h1>
+      <p>Hello, world. The annual bingo draft is coming together.</p>
+    </main>
+  );
 }

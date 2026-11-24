@@ -1,5 +1,11 @@
+# Real env files are never committed; only .env.example is.
 .env*
+!.env.example
+
 node_modules
 .next
 next-env.d.ts
+tsconfig.tsbuildinfo
 .gitconfig
+.vercel
+coverage

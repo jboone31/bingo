@@ -1,0 +1,14 @@
+# Build output and dependencies
+.next/
+out/
+build/
+node_modules/
+
+# Authored project docs and specs (prose owned outside the scaffold)
+.kiro/
+README.md
+
+# Generated files
+next-env.d.ts
+tsconfig.tsbuildinfo
+package-lock.json
