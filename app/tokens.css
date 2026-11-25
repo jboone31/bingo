@@ -1,0 +1,96 @@
+/*
+ * Design tokens. Every component style reads these and nothing else.
+ *
+ * Dark is the default (sports-draft broadcast look). Light applies when the
+ * system prefers light, unless an element sits under data-theme="dark" (the
+ * draft room and big screen force dark). Colors are 6-digit hex so the contrast
+ * test in test/smoke/designTokens.test.ts can read them.
+ *
+ * Breakpoints cannot be custom properties in media queries, so they are fixed:
+ * 640px (tablet), 960px (desktop), 1280px (large display).
+ */
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #0a0e1a;
+  --color-surface: #121a2e;
+  --color-raised: #1b2640;
+  --color-border: #5b6e99;
+  --color-text: #f4f7ff;
+  --color-muted: #9fb0d0;
+  --color-accent: #ffc400;
+  --color-on-accent: #0a0e1a;
+  --color-accent-ink: #ffc400;
+  --color-info: #2de2e6;
+  --color-danger: #ff6b78;
+  --color-success: #3ddc84;
+  --glow-accent: 0 0 0 1px rgb(255 196 0 / 40%), 0 0 18px rgb(255 196 0 / 35%);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 50%);
+  --shadow-2: 0 8px 28px rgb(0 0 0 / 55%);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --color-bg: #f2f5fb;
+    --color-surface: #ffffff;
+    --color-raised: #e6ecf7;
+    --color-border: #6b7ba0;
+    --color-text: #0b1226;
+    --color-muted: #44537a;
+    --color-accent: #ffc400;
+    --color-on-accent: #0a0e1a;
+    --color-accent-ink: #7a5a00;
+    --color-info: #00606b;
+    --color-danger: #b3202f;
+    --color-success: #126b38;
+    --glow-accent: 0 0 0 1px rgb(122 90 0 / 40%), 0 0 14px rgb(255 196 0 / 45%);
+    --shadow-1: 0 1px 2px rgb(11 18 38 / 18%);
+    --shadow-2: 0 8px 24px rgb(11 18 38 / 18%);
+  }
+}
+
+:root {
+  --font-display:
+    var(--font-display-loaded), "Barlow Condensed", "Arial Narrow", system-ui,
+    sans-serif;
+  --font-body:
+    var(--font-body-loaded), system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
+  --text-2xl: clamp(2rem, 1.5rem + 2vw, 3rem);
+  --text-3xl: clamp(2.5rem, 1.8rem + 3vw, 4.5rem);
+  --text-4xl: clamp(3.5rem, 2rem + 6vw, 8rem);
+
+  --motion-fast: 120ms;
+  --motion-base: 220ms;
+
+  --touch-target: 2.75rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+    --glow-accent: none;
+  }
+}

@@ -1,0 +1,19 @@
+.panel {
+  border: 1px solid var(--color-border);
+  border-top-color: var(--color-raised);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+
+.title {
+  padding: var(--space-3) var(--space-4);
+  border-left: 4px solid var(--color-accent);
+  background: var(--color-raised);
+  font-size: var(--text-lg);
+}
+
+.body {
+  padding: var(--space-4);
+}

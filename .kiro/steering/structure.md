@@ -33,6 +33,24 @@ Everything else at the root is configuration and tooling, not source: `package.j
 Pages and server route handlers live together under the App Router. API routes are
 under `app/api/`. Tests are co-located with the file they cover.
 
+- `tokens.css`: design tokens (colors, type, spacing, motion). `globals.css`: base
+  styles.
+- `(app)/`: route group for signed-in pages. Its layout renders the app shell. URLs
+  do not include `(app)`. `sign-in/` sits outside it and has its own layout.
+- `(app)/dev/components/`: component gallery, 404 unless `ENABLE_DEV_TOOLS=1`.
+
+### URL scheme
+
+```
+/                              home: my leagues
+/profile
+/leagues/new, /leagues/join    create, enter a code (F2 decides join paths)
+/leagues/[leagueId]            overview
+/leagues/[leagueId]/pool | queue | draft | screen | board | settings
+```
+
+`draft` is the draft room and `screen` is the big screen.
+
 ### `lib/`
 
 Pure domain logic that does not depend on Next.js, so it can be unit- and
@@ -42,12 +60,20 @@ property-tested in isolation. Current modules:
 - `db/`: the transaction-capable server database helper (server-only).
 - `auth/`: sign-in redirect safety, route access rules, server session lookup.
 - `profile/`: display name validation, profile read and update.
+- `format/`: date and time formatting (viewer's time zone).
 
 New domain areas (leagues, pool, draft, board) get their own folder here.
 
 ### `components/`
 
-Shared React components (sign-in button, sign-out button, display name form).
+Shared React components.
+
+- `ui/`: the design system (Button, TextField, Panel, Badge, PageHeader, Dialog,
+  Toast, EmptyState, ErrorState, Spinner, Skeleton). Each has a CSS Module and a
+  test. Styled only from tokens.
+- `shell/`: the signed-in frame (AppHeader, UserMenu, PageContainer, SubNav).
+- Top level: feature components such as `GoogleSignInButton`, `DisplayNameForm` and
+  `LocalTime`.
 
 ### `utils/supabase/`
 

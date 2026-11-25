@@ -31,7 +31,7 @@ written and features ship.
 | --- | ------------------------------- | -------------- | ----------- |
 | F0  | Foundation (scaffold, steering) | none           | Done        |
 | F1  | Auth and profiles               | F0             | Done        |
-| F1.5 | Design system and app shell    | F1             | Not started |
+| F1.5 | Design system and app shell    | F1             | Done        |
 | F2  | Leagues                         | F1.5           | Not started |
 | F2.5 | Dev tooling and seed scenarios | F2             | Not started |
 | F3  | Pool administration             | F2             | Not started |
@@ -72,7 +72,8 @@ Decided: the profile stores the Google full name at first sign-in (else
   each viewer's own time zone.
 - Restyle the F1 screens (sign-in, profile, home) with the new components.
 
-Open: CSS approach, visual style, light/dark.
+Decided: CSS Modules with CSS variables, sports-draft broadcast look, follows the
+system light/dark setting. See `.kiro/specs/design-system/`.
 
 ## F2: Leagues
 

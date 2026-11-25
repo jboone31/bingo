@@ -9,6 +9,7 @@ import {
   SUPABASE_ANON_KEY_VAR,
   SUPABASE_PUBLISHABLE_KEY_VAR,
   SUPABASE_URL_VAR,
+  isDevToolsEnabled,
   requireCronSecret,
   requireServerDbUrl,
   requireServiceRoleKey,
@@ -100,4 +101,14 @@ describe("server variables", () => {
       }
     });
   }
+});
+
+describe("isDevToolsEnabled", () => {
+  it("is true only for ENABLE_DEV_TOOLS=1", () => {
+    expect(isDevToolsEnabled({ ENABLE_DEV_TOOLS: "1" })).toBe(true);
+    expect(isDevToolsEnabled({ ENABLE_DEV_TOOLS: " 1 " })).toBe(true);
+    expect(isDevToolsEnabled({ ENABLE_DEV_TOOLS: "true" })).toBe(false);
+    expect(isDevToolsEnabled({ ENABLE_DEV_TOOLS: "0" })).toBe(false);
+    expect(isDevToolsEnabled({})).toBe(false);
+  });
 });

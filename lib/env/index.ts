@@ -18,6 +18,7 @@ export const SUPABASE_ANON_KEY_VAR = "NEXT_PUBLIC_SUPABASE_ANON_KEY";
 export const SERVICE_ROLE_KEY_VAR = "SUPABASE_SERVICE_ROLE_KEY";
 export const DB_URL_VAR = "SUPABASE_DB_URL";
 export const CRON_SECRET_VAR = "CRON_SECRET";
+export const DEV_TOOLS_VAR = "ENABLE_DEV_TOOLS";
 
 /** A raw environment source (`process.env` or a test double). */
 export type EnvSource = Readonly<Record<string, string | undefined>>;
@@ -112,4 +113,12 @@ export function requireServiceRoleKey(source: EnvSource = process.env): string {
 /** The shared secret that protects cron/maintenance routes. Server-only. */
 export function requireCronSecret(source: EnvSource = process.env): string {
   return requireServerVar(CRON_SECRET_VAR, source);
+}
+
+/**
+ * True only when `ENABLE_DEV_TOOLS=1`. Gates the component gallery and later the
+ * seed and "act as" tools. Never set it on Vercel Production.
+ */
+export function isDevToolsEnabled(source: EnvSource = process.env): boolean {
+  return source[DEV_TOOLS_VAR]?.trim() === "1";
 }

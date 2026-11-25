@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
 import { createClient } from "@/utils/supabase/client";
 
 /** Starts Google OAuth. `next` must already be a safe same-site path. */
@@ -24,9 +25,9 @@ export function GoogleSignInButton({ next }: { next: string }) {
 
   return (
     <div>
-      <button type="button" onClick={signIn} disabled={pending}>
+      <Button size="lg" loading={pending} onClick={signIn}>
         Sign in with Google
-      </button>
+      </Button>
       {failed ? <p role="alert">Could not start sign-in. Try again.</p> : null}
     </div>
   );

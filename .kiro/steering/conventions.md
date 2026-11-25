@@ -78,6 +78,17 @@ say so in the spec and update this file.
   `test/integration/`.
 - Add tests when the spec's tasks call for them.
 
+## Design
+
+- Styles use tokens from `app/tokens.css` only: no hard-coded colors, font families
+  or one-off sizes in component styles (a test enforces colors and fonts).
+- Build screens from `components/ui/` and `components/shell/`. Add a variant to a
+  shared component rather than styling around it.
+- Follow the layout rules and wireframes in `.kiro/specs/design-system/`: mobile
+  first, 44px touch targets, dark forced on the draft room and big screen.
+- Show timestamps with `LocalTime` or `formatDateTime` so viewers see their own time
+  zone.
+
 ## Dev Scenarios
 
 - Each feature lists the states it needs to be tested in (for example "pool full,
