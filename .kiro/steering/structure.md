@@ -24,7 +24,7 @@ Everything else at the root is configuration and tooling, not source: `package.j
 `package-lock.json`, `tsconfig.json`, `next.config.ts`, `proxy.ts`,
 `eslint.config.mjs`, `vitest.*`, `.prettierrc.json`, `.prettierignore`,
 `.gitattributes`, `.gitignore`, `.nvmrc`, `.env.example`, `next-env.d.ts`,
-`README.md`.
+`vercel.json` (pins the Next.js framework preset), `README.md`.
 
 ## Directory Details
 
@@ -39,28 +39,26 @@ under `app/api/`. Tests are co-located with the file they cover.
   do not include `(app)`. `sign-in/` sits outside it and has its own layout.
 - `(app)/dev/components/`: component gallery, 404 unless `ENABLE_DEV_TOOLS=1`.
 
-### Pool routes
+### Routes and pages
 
-`app/api/leagues/[leagueId]/submissions/` (add, clear), `.../import` (CSV, with a dry
-run), `.../[submissionId]` (edit, delete). Page: `(app)/leagues/[leagueId]/pool`.
+All API routes use the Node.js runtime and are built on `lib/api`. Pages sit under the
+`(app)` group unless noted.
 
-### Queue routes
-
-`app/api/leagues/[leagueId]/queue/` (add, reorder) and `.../queue/[submissionId]`
-(remove). Page: `(app)/leagues/[leagueId]/queue`. The pool page takes `?cat=&q=&sort=&page=`.
-
-### Dev routes
-
-`app/api/dev/` (`seed`, `reset`, `act-as`, `sign-in`) and the `(app)/dev` page. All
-return 404 unless dev tools are enabled. `sign-in` works without a session and also
-requires a local or private-network host; the sign-in page shows it as "Dev sign-in".
-
-### League routes
-
-`app/api/leagues/` (create, join), `[leagueId]/` (delete), `[leagueId]/leave`,
-`[leagueId]/members/[userId]` (remove), `[leagueId]/join-code`, `[leagueId]/transfer`.
-Pages: `(app)/leagues/new`, `(app)/leagues/join`, `(app)/join/[code]`,
-`(app)/leagues/[leagueId]` (layout, overview, settings).
+- **Leagues**: `app/api/leagues/` (create, join), `[leagueId]/` (draft date, delete),
+  `[leagueId]/leave`, `[leagueId]/members/[userId]` (remove), `[leagueId]/join-code`,
+  `[leagueId]/transfer`. Pages: `leagues/new`, `leagues/join`, `join/[code]`,
+  `leagues/[leagueId]` (layout, overview, `settings`).
+- **Pool**: `app/api/leagues/[leagueId]/submissions/` (add, clear), `.../import` (CSV,
+  with a dry run), `.../[submissionId]` (edit, delete). Page: `leagues/[leagueId]/pool`,
+  which reads `?cat=&q=&sort=&page=` (`cat` is `c:<name>` or `none`).
+- **Queue**: `app/api/leagues/[leagueId]/queue/` (add, reorder) and
+  `.../queue/[submissionId]` (remove). Page: `leagues/[leagueId]/queue`.
+- **Dev**: `app/api/dev/` (`seed`, `reset`, `act-as`, `sign-in`) and the `dev` page.
+  All return 404 unless dev tools are enabled. `sign-in` works without a session and
+  also requires a local or private-network host; the sign-in page shows it as
+  "Dev sign-in".
+- **Auth and profile**: `app/api/auth/callback`, `app/api/auth/sign-out`,
+  `app/api/profile`; pages `sign-in` (outside the group, own layout) and `profile`.
 
 ### URL scheme
 
@@ -84,7 +82,9 @@ property-tested in isolation. Current modules:
 - `db/`: the transaction-capable server database helper (server-only).
 - `auth/`: sign-in redirect safety, route access rules, server session lookup.
 - `profile/`: display name validation, profile read and update.
-- `format/`: date and time formatting (viewer's time zone).
+- `format/`: date and time formatting (viewer's time zone). `formatUtcStable` builds
+  server-safe text without `Intl`.
+- `ids/`: `newRequestId()`, a UUID that works in insecure browser contexts.
 - `api/`: route helpers (`handle`, `readJsonObject`, `parseUuid`, `ok`/`fail`,
   `ApiError`). Server-only.
 - `dev/`: dev-only tools: gate, seed identity, scenario registry, seeding, reset and
@@ -97,7 +97,7 @@ property-tested in isolation. Current modules:
 - `leagues/`: league rules and validation (pure), SQL (`queries.ts`), RLS reads
   (`read.ts`), and route guards. Player-facing error text is in `messages.ts`.
 
-New domain areas (leagues, pool, draft, board) get their own folder here.
+New domain areas (events, draft, board) get their own folder here.
 
 ### `components/`
 
@@ -124,7 +124,17 @@ Factories for the Supabase client in each runtime: `client.ts` (browser),
 ### `supabase/migrations/`
 
 Numbered SQL files (`NNNN_name.sql`), each wrapped in its own `begin; ... commit;`.
-Applied in order by `npm run db:migrate`.
+Applied in order by `npm run db:migrate`. All seven below are applied to the live project.
+
+| File | Adds |
+| --- | --- |
+| `0001_extensions` | `pg_cron` (enabled; the timer backstop will use it) |
+| `0002_profiles` | `profiles`, the sign-up trigger, backfill |
+| `0003_profiles_grants` | select grant on `profiles` |
+| `0004_leagues` | `leagues`, `league_members`, `is_league_member`, `shares_league_with`, status and member guards |
+| `0005_seed_tag` | `leagues.seed_scenario` (dev tools) |
+| `0006_submissions` | `submissions`, `submission_imports`, pool guard and 5,000 cap |
+| `0007_queue` | `queue_items` (owner-only), its guard, `pool_categories` view |
 
 ### `scripts/`
 
@@ -136,8 +146,12 @@ Node scripts run manually against the live Supabase project. They load `.env.loc
 
 ### `test/`
 
-- `smoke/`: project-wide checks, including the structure consistency check.
+- `smoke/`: project-wide checks: the structure consistency check and the design-token
+  contrast and no-hard-coded-colors checks.
+- `helpers/`: shared mocks for route tests (`leagueRoutes.ts`).
 - `integration/`: live-database suites, run only by `npm run test:integration`.
+  `integration/helpers/` creates users and leagues, runs queries as a role (`asRole`),
+  and cleans up.
 
 ## Where Things Go Next
 

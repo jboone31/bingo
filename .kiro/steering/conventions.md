@@ -30,6 +30,10 @@ say so in the spec and update this file.
 - Write `(select auth.uid())` rather than a bare `auth.uid()` in policies so Postgres
   evaluates it once per query.
 - Index every column a policy filters on.
+- A new table needs an explicit `grant select ... to authenticated`. This project does
+  not grant new tables to API roles by default, so a policy alone gives "permission
+  denied" (see migration 0003). Revoke everything from `anon` and `authenticated`
+  first, then grant select only.
 - A table that clients subscribe to must be added to the Realtime publication in its
   migration.
 - Every table with policies gets live integration tests that confirm a member can
@@ -66,7 +70,14 @@ say so in the spec and update this file.
   raw database errors or connection details.
 - Routes are thin. Rules live in `lib/` as pure functions the route calls.
 - Anything a client might trigger twice (a pick, a nudge, a double-click) must be
-  safe to repeat.
+  safe to repeat. Creates that a double-click could duplicate carry a client request id
+  (`newRequestId()`) stored under a unique constraint.
+- A write that depends on league status first locks the league row in the same
+  transaction: `for update` (`lib/leagues/guard.ts`), or for member-level writes such as
+  queue changes `for share` plus the member's own row (`lib/queue/queries.ts`). The draft
+  start locks it `for update`, so it cannot interleave with either.
+- Unexpected errors are logged on the server as `[api] unexpected error: ...` (name,
+  database code, message; no stack) and returned as `internal_error` with no detail.
 
 ## Code Layout
 
@@ -77,12 +88,33 @@ say so in the spec and update this file.
 - Imports use the `@/` alias for repo-root paths.
 - Server-only modules import `server-only` so a client import fails the build.
 
+## Client Code
+
+- Do not call `crypto.randomUUID()` in browser code: a phone on `http://<LAN IP>` is not
+  a secure context. Use `newRequestId()`.
+- Text rendered on the server must not come from `Intl`; Node and browsers format it
+  differently and hydration fails. Use `LocalTime` (UTC placeholder, then the viewer's
+  zone) or `formatUtcStable`.
+- A library that numbers DOM ids from a module counter needs a stable `id` (`useId()`).
+- Touch drag uses a press-and-hold `TouchSensor`. Never `PointerSensor`, and never
+  `touch-action: none` on a handle (`components/queue/sensors.ts`, with a guarding test).
+- Respond to a click at once and confirm with the server (optimistic), rolling back
+  with a message on failure. Save repeated changes one request at a time
+  (`lib/queue/saver.ts`).
+
 ## Testing
 
 - Pure rules (snake order, group split, start gate, board mapping, CSV parsing,
   timer settlement decisions) get fast-check property tests in addition to examples.
 - Default tests are offline. Anything that needs the database goes in
   `test/integration/`.
+- Route tests mock the session and the query modules (`test/helpers/leagueRoutes.ts`).
+  Component and page tests opt into jsdom with `// @vitest-environment jsdom`.
+- Integration suites run against the one live project, so they create their own data
+  with `test/integration/helpers` and clean up. Those that use the service-role key
+  (`devTools`) are run by the user.
+- A test must fail for the reason it names: reproduce a bug in a failing test before
+  fixing it where practical.
 - Add tests when the spec's tasks call for them.
 
 ## Design

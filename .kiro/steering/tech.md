@@ -12,7 +12,8 @@
   `typescript-eslint` does not support it. Revisit when it does.
 - **Quality tooling**: ESLint (flat config, Next + TypeScript rules), Prettier owns
   formatting.
-- **Testing**: Vitest as the runner, fast-check for property-based tests.
+- **Testing**: Vitest as the runner, fast-check for property-based tests, Testing
+  Library (with `user-event`) and jsdom for component and page tests.
 - **Drag and drop**: `@dnd-kit` (core, sortable, utilities) for the re-orderable queue.
   It supports touch, mouse and keyboard.
 
@@ -57,6 +58,10 @@ Persistent Google accounts through Supabase Auth, with an optional display name.
 A player has one account and can belong to many leagues. League membership and role
 are data, not session state.
 
+Supabase sends users back only to URLs on its Redirect URLs allowlist. Add each origin
+that signs in (`localhost:3000`, the production domain). A LAN address was rejected
+even with exact entries (cause unknown), so phone testing uses the dev-only sign-in.
+
 ## Testing Philosophy
 
 - Domain logic is framework-free, lives in `lib/`, and is covered by unit tests and
@@ -74,6 +79,9 @@ are data, not session state.
 - Real env files are git-ignored; `.env.example` documents every variable.
 - Env is read through `lib/env` so a bad deployment fails with a message that names
   every missing variable.
+- **One Supabase project serves dev, preview and production.** There is no separate dev
+  database, so dev tooling is gated by `ENABLE_DEV_TOOLS` (never on Production) and
+  touches only tagged seed data.
 - Schema changes are numbered SQL files in `supabase/migrations/`, applied in order
   by `npm run db:migrate`, which records what has run and is safe to re-run.
 
@@ -81,7 +89,6 @@ are data, not session state.
 
 - How draft groups map onto Realtime channels and RLS policies.
 - Whether PNG export is done in the browser or on the server.
-- Resolved: a single shared Supabase project. Dev tooling is guarded by an env flag.
 
 ---
 

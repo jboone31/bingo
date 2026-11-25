@@ -63,7 +63,6 @@ change it later.
 
 ## Open Product Questions
 
-- Can a league be deleted, and by whom? (Admin transfer is optional for the MVP.)
 - Does the draft date do anything beyond being displayed?
 
 ---

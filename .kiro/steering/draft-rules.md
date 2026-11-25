@@ -37,6 +37,9 @@ for behavior. Specs refine them but should not contradict them. Items marked
 - Every member can view the full pool, and filter and sort it by category.
 - Every member keeps a personal queue: an ordered list of squares they want. They add
   from the pool and drag to re-rank.
+- A queue is private to its owner, holds up to 200 squares, and is edited while
+  `pre_draft` (and during the draft, from F7). Removing a square from the pool removes
+  it from every queue.
 - The admin sets a draft date. It is shown to all members.
 - The admin sets the number of draft groups and can change it any time before the
   start.

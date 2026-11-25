@@ -44,6 +44,52 @@ written and features ship.
 | F10 | Board generation                | F7             | Not started |
 | F11 | Board view and export           | F10            | Not started |
 
+## Status And Handoff
+
+Built and committed: **F0 to F4**. Nothing is half done. The working tree is clean.
+**Next: F5 (Realtime and event log).** Its spec does not exist yet.
+
+**Before writing the F5 spec, bring these to the user** (with a recommendation each):
+which league activity becomes an event (joins, leaves, removals, admin transfer, code
+regeneration, draft date, pool changes; queues are private and should not be in a
+league-wide feed); the event table's shape and ordering; how the browser learns server
+time; and how long events are kept.
+
+**Manual checks still unticked** in the specs (the user tested most flows informally
+but has not confirmed these):
+- `design-system` 7.1: gallery in light and dark, keyboard only, reduced motion. 7.2:
+  sign-in, profile edit and sign out end to end (almost certainly fine, since the user
+  signs in daily, but never explicitly confirmed).
+- `dev-tooling` 6.2: `/dev` returns 404 with the flag unset.
+- `leagues` 6.2, `pool` 6.2, `queue` 7.5: layouts at 360px and desktop width.
+- `queue` 7.1 to 7.4: filters, queue buttons, drag on laptop and phone, two-tab check.
+  Drag worked on desktop. On the phone it was reworked (press-and-hold touch drag, one
+  finger only, edge scrolling) and a hydration error was fixed; neither fix has been
+  re-confirmed on the phone.
+
+**Open threads, none blocking:**
+- Supabase rejects the LAN address as a sign-in redirect even with exact allowlist
+  entries. Unexplained. The phone uses "Dev sign-in" instead.
+- One 500 on `PATCH /api/leagues/[leagueId]` (draft date) happened once and did not
+  recur. Unexpected route errors are now logged on the server.
+- `devTools.integration.test.ts` has not been run by an agent (needs the service-role
+  key; see `workflow.md`).
+- League names show in capitals because headings are styled that way. The user was
+  asked whether to show them as typed; no answer yet.
+- Optional, not built: "Move to top" or "move to position" for long queues.
+- Decided to skip for now: attempt limits on join codes.
+- Still open product questions: whether the draft date does anything beyond display;
+  F8 banner scope; F11 who can download the CSV; PNG export in browser or on the server.
+
+**Building blocks to reuse, not rebuild:** `lib/api` (`handle`, `handlePublic`,
+`readJsonObject`, `parseUuid`, `ok`/`fail`); `lib/leagues/guard.ts` (`assertAllowed`,
+`lockLeagueForMember`); `lib/queue/queries.ts` (`lockMemberForQueue`); `lib/ids`
+(`newRequestId`); `lib/format` and `LocalTime`; `lib/pool/csv.ts` (`serializeCsv`);
+`components/leagues/ConfirmAction`, `components/ui/*` (including `Pagination` with
+`params`), `components/pool/*`, `components/queue/*`; `test/helpers/leagueRoutes.ts`
+(route test mocks); `test/integration/helpers` (users, leagues, `asRole`, cleanup);
+`lib/dev/scenarios.ts` (add each feature's seed scenarios here).
+
 ## F0: Foundation (done)
 
 Next.js app on Node 26, Supabase connection and migration runner, env validation,
@@ -161,6 +207,14 @@ Decided: group scoping is deferred to F7. F5 does not depend on F6.
 
 Open: how groups map onto channels and access rules (answered in F7).
 
+From earlier features:
+- Nothing subscribes to Realtime yet, and no table is in the publication. Add each
+  subscribed table to the publication in its own migration (`conventions.md`).
+- Mutation points that could emit league events today: `app/api/leagues/**` (join,
+  leave, remove, transfer, join-code, draft date, delete) and the submissions routes.
+- Server time: `reference-bbb.md` has the offset pattern. Existing time display is
+  display only (`LocalTime`).
+
 ## F6: Draft setup and start
 
 - Admin sets the group count, changeable during pre-draft.
@@ -172,6 +226,16 @@ Open: how groups map onto channels and access rules (answered in F7).
   copied: each group drafts from the league's submissions, and availability is the
   absence of a pick in that group.
 - A league with fewer members than groups cannot start.
+
+From earlier features:
+- The start must lock the league row `for update`. Pool writes lock it the same way,
+  and queue writes hold it `for share`, so the start cannot interleave with either.
+  Joining is already blocked by `league_members_guard`.
+- Setting `drafting` already freezes the pool (`submissions_guard`), membership
+  (`league_members_guard`, and the leave and remove rules) and queues
+  (`queue_items_guard`) in the database. F7 must loosen the queue guard.
+- Group count and pick timer need new columns (a new migration). `N` includes the admin.
+- Dev scenarios: add "pool ready to start" variants as needed (`pool_ready` exists).
 
 ## F7: Draft engine and timers
 
@@ -191,6 +255,18 @@ Open: how groups map onto channels and access rules (answered in F7).
   on demand, and let bots pick for chosen players, so the draft room can be tested
   without waiting.
 
+From earlier features:
+- Queues must stay editable during the draft. Replace `queue_items_guard` in a new
+  migration so `drafting` is allowed, and update `canEditQueue` and `canAddToQueue` in
+  `lib/queue/rules.ts` and the tests that expect 409 `league_not_pre_draft`.
+- The pool stays frozen. Picks reference `submissions.id`; never assume text is unique.
+- Server code connects as the database owner, so settle and auto-pick can read every
+  player's queue despite the owner-only policy (integration tests rely on this).
+- Decide whether a picked square leaves each player's queue in the same group.
+- `pg_cron` is already enabled (migration 0001). Routes that trigger settle should use
+  `handle`, carry request ids where a repeat could matter, and lock the league row.
+- Add draft-state seed scenarios (mid-draft, expired deadline) and the dev controls.
+
 ## F8: Draft room UI
 
 - Remaining submissions with filter and sort, and an add-to-queue action.
@@ -202,6 +278,13 @@ Open: how groups map onto channels and access rules (answered in F7).
 - A live banner with the latest event.
 
 Open: whether the banner is group-wide or league-wide.
+
+From earlier features:
+- Reuse `PoolFilterBar` (takes a `basePath`), `SubmissionList`, `Pagination`,
+  `QueueList` and `QueueToggle`. `QueueList` starts over when its `key` changes; the
+  queue page keys it by the server's item ids.
+- Force dark with `data-theme="dark"` (see `.kiro/specs/design-system/`).
+- Drag on touch uses a press-and-hold (`components/queue/sensors.ts`).
 
 ## F9: Live feed and big screen
 
@@ -228,3 +311,8 @@ Decided: the mapping is per league and stays hidden until boards are generated.
 - Export the full draft results as CSV.
 
 Open: who can download the full CSV (admin only, or everyone).
+
+From earlier features:
+- `serializeCsv` (`lib/pool/csv.ts`) quotes cells but does not guard against
+  spreadsheet formulas. Neutralize cells that start with `=`, `+`, `-` or `@` in the
+  export.
