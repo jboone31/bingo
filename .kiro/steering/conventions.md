@@ -43,6 +43,8 @@ say so in the spec and update this file.
 - All timestamps are `timestamptz`, stored in UTC. Every table has `created_at`.
 - The database clock is the only clock that decides anything time-based, such as
   pick deadlines. Client clocks are used only to display countdowns.
+- Tables owned by a league reference it with `on delete cascade`, so deleting a
+  league removes everything it owns.
 - Prefer constraints and unique indexes over application checks for rules the data
   must always satisfy.
 - Migrations are numbered `NNNN_name.sql`, each in its own `begin; ... commit;`.

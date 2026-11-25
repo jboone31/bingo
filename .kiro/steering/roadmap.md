@@ -32,7 +32,7 @@ written and features ship.
 | F0  | Foundation (scaffold, steering) | none           | Done        |
 | F1  | Auth and profiles               | F0             | Done        |
 | F1.5 | Design system and app shell    | F1             | Done        |
-| F2  | Leagues                         | F1.5           | Not started |
+| F2  | Leagues                         | F1.5           | Done        |
 | F2.5 | Dev tooling and seed scenarios | F2             | Not started |
 | F3  | Pool administration             | F2             | Not started |
 | F4  | Pre-draft pool and queue        | F2, F3         | Not started |
@@ -93,7 +93,9 @@ system light/dark setting. See `.kiro/specs/design-system/`.
 
 Decided: the admin also plays, so they count in `N`. See `draft-rules.md`.
 
-Open: league deletion (whether it exists and who can do it).
+Decided: the admin can delete a league only while `pre_draft`, by typing its name.
+The admin can remove members pre-draft. Join codes are 8 characters with no attempt
+limit for now. See `.kiro/specs/leagues/`.
 
 ## F2.5: Dev tooling and seed scenarios
 
@@ -105,8 +107,11 @@ Open: league deletion (whether it exists and who can do it).
 - Reset one scenario league without touching real data.
 - Safety: dev routes and seeds run only with an explicit env flag, never in
   production, and touch only rows tagged as seed data.
-- Shared integration-test helpers (create user, league, members), replacing the
-  inline helper in `test/integration/profiles.integration.test.ts`.
+- Shared integration-test helpers already exist in `test/integration/helpers/`
+  (created in F2); extend them into the seed tooling.
+- F2 scenarios to build: `league_empty` (admin only), `league_with_players` (admin
+  plus 11 members and a draft date), `league_full` (100 members), `member_view` (the
+  viewer is a regular member).
 
 Decided: one Supabase project, no separate dev database. The safety rules above
 are therefore mandatory, and seeded users and leagues are tagged so they can be

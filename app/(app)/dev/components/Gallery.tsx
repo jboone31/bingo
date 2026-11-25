@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
+import { Select } from "@/components/ui/Select";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Spinner } from "@/components/ui/Spinner";
 import { TextField } from "@/components/ui/TextField";
@@ -65,6 +66,17 @@ export function Gallery() {
             <TextField label="With hint" hint="Shown to other players." />
             <TextField label="With error" error="Enter 1 to 40 characters." />
           </div>
+        </Panel>
+
+        <Panel title="Select">
+          <Select
+            label="Player"
+            placeholder="Choose a player"
+            options={[
+              { value: "a", label: "Ada" },
+              { value: "b", label: "Bob" },
+            ]}
+          />
         </Panel>
 
         <Panel title="Badges">

@@ -6,6 +6,7 @@ for behavior. Specs refine them but should not contradict them. Items marked
 
 ## Leagues And Membership
 
+- Only the admin can delete a league, and only during `pre_draft`.
 - Anyone signed in can create a league and becomes its admin. The admin also
   plays: they are a member and count in `N`.
 - Others join through an invite link or join code and are regular players.
@@ -14,6 +15,7 @@ for behavior. Specs refine them but should not contradict them. Items marked
 - A league runs one draft.
 - A league has a status: `pre_draft`, `drafting`, `in_progress`. It only moves
   forward. `in_progress` begins when boards are generated at the end of the draft.
+- The admin can remove another member during `pre_draft`.
 - A player can leave a league during `pre_draft`. The admin cannot leave without
   transferring admin (optional for the MVP) or deleting the league.
 

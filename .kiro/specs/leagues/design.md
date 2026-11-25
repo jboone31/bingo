@@ -128,9 +128,9 @@ No Realtime publication in F2: nothing subscribes yet. F5 adds it.
   data (status, member count, roles), no database:
   - `canJoin({ status, memberCount, alreadyMember })`
   - `canLeave({ status, role })`
-  - `canRemove({ status, actorRole, targetRole, isSelf })`
+  - `canRemove({ status, actorRole, isSelf })`
   - `canRegenerateCode({ status, actorRole })`
-  - `canTransfer({ actorRole, targetIsMember, targetIsAdmin })`
+  - `canTransfer({ actorRole, targetIsMember })`
   - `canDelete({ status, actorRole, confirmName, leagueName })`
 
   `reason` values and HTTP statuses are in the table below.

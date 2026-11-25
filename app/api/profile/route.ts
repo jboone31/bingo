@@ -1,5 +1,7 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/auth/session";
+import { readJsonObject } from "@/lib/api/body";
+import { ApiError } from "@/lib/api/errors";
+import { handle } from "@/lib/api/handler";
+import { ok } from "@/lib/api/response";
 import { withTransaction } from "@/lib/db/server";
 import { parseDisplayName } from "@/lib/profile/displayName";
 import { updateProfile } from "@/lib/profile/updateProfile";
@@ -7,52 +9,24 @@ import { updateProfile } from "@/lib/profile/updateProfile";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function fail(reason: string, status: number): NextResponse {
-  return NextResponse.json({ ok: false, reason }, { status });
-}
-
 /** PATCH /api/profile: change the signed-in user's display name. */
-export async function PATCH(request: NextRequest): Promise<NextResponse> {
-  // 1. Validate input.
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return fail("invalid_body", 400);
-  }
-  if (
-    typeof body !== "object" ||
-    body === null ||
-    Array.isArray(body) ||
-    Object.keys(body).some((key) => key !== "displayName")
-  ) {
-    return fail("invalid_body", 400);
-  }
-  const parsed = parseDisplayName(
-    (body as Record<string, unknown>).displayName,
-  );
-  if (!parsed.ok) {
-    return fail(parsed.reason, 400);
-  }
-
-  try {
-    // 2. Authenticate. Users can only ever edit their own profile (id from claims).
-    const user = await getSessionUser();
-    if (user === null) {
-      return fail("unauthenticated", 401);
+export const PATCH = handle({
+  parse: async (request) => {
+    const body = await readJsonObject(request, ["displayName"]);
+    const parsed = parseDisplayName(body.displayName);
+    if (!parsed.ok) {
+      throw new ApiError(parsed.reason, 400);
     }
-    // 3. One transaction.
+    return parsed.value;
+  },
+  // The id comes from verified claims, so users can only edit their own profile.
+  run: async ({ user, input }) => {
     const profile = await withTransaction((tx) =>
-      updateProfile(tx, user.id, parsed.value),
+      updateProfile(tx, user.id, input),
     );
     if (profile === null) {
-      return fail("profile_not_found", 404);
+      throw new ApiError("profile_not_found", 404);
     }
-    return NextResponse.json({
-      ok: true,
-      profile: { displayName: profile.displayName },
-    });
-  } catch {
-    return fail("internal_error", 500);
-  }
-}
+    return ok({ profile: { displayName: profile.displayName } });
+  },
+});

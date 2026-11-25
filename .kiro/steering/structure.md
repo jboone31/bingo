@@ -39,13 +39,21 @@ under `app/api/`. Tests are co-located with the file they cover.
   do not include `(app)`. `sign-in/` sits outside it and has its own layout.
 - `(app)/dev/components/`: component gallery, 404 unless `ENABLE_DEV_TOOLS=1`.
 
+### League routes
+
+`app/api/leagues/` (create, join), `[leagueId]/` (delete), `[leagueId]/leave`,
+`[leagueId]/members/[userId]` (remove), `[leagueId]/join-code`, `[leagueId]/transfer`.
+Pages: `(app)/leagues/new`, `(app)/leagues/join`, `(app)/join/[code]`,
+`(app)/leagues/[leagueId]` (layout, overview, settings).
+
 ### URL scheme
 
 ```
 /                              home: my leagues
 /profile
-/leagues/new, /leagues/join    create, enter a code (F2 decides join paths)
+/leagues/new, /leagues/join    create, enter a code
 /leagues/[leagueId]            overview
+/join/[code]                    invite link
 /leagues/[leagueId]/pool | queue | draft | screen | board | settings
 ```
 
@@ -61,6 +69,10 @@ property-tested in isolation. Current modules:
 - `auth/`: sign-in redirect safety, route access rules, server session lookup.
 - `profile/`: display name validation, profile read and update.
 - `format/`: date and time formatting (viewer's time zone).
+- `api/`: route helpers (`handle`, `readJsonObject`, `parseUuid`, `ok`/`fail`,
+  `ApiError`). Server-only.
+- `leagues/`: league rules and validation (pure), SQL (`queries.ts`), RLS reads
+  (`read.ts`), and route guards. Player-facing error text is in `messages.ts`.
 
 New domain areas (leagues, pool, draft, board) get their own folder here.
 
@@ -71,6 +83,8 @@ Shared React components.
 - `ui/`: the design system (Button, TextField, Panel, Badge, PageHeader, Dialog,
   Toast, EmptyState, ErrorState, Spinner, Skeleton). Each has a CSS Module and a
   test. Styled only from tokens.
+- `leagues/`: league screens' components (cards, forms, member list, invite panel,
+  confirm and delete dialogs).
 - `shell/`: the signed-in frame (AppHeader, UserMenu, PageContainer, SubNav).
 - Top level: feature components such as `GoogleSignInButton`, `DisplayNameForm` and
   `LocalTime`.

@@ -1,54 +1,15 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { closeDb, getSql } from "@/lib/db/server";
+import { asRole, cleanup, createUser, hasDb } from "./helpers";
 
-/**
- * Live checks for the profiles table, trigger and RLS. Users are inserted into
- * auth.users directly (the trigger fires) and deleted afterwards.
- */
-const hasDb = Boolean(process.env.SUPABASE_DB_URL?.trim());
-
-const created: string[] = [];
-
-async function createUser(meta: Record<string, unknown>): Promise<string> {
-  const id = randomUUID();
-  await getSql()`
-    insert into auth.users (id, aud, role, email, raw_user_meta_data)
-    values (${id}, 'authenticated', 'authenticated',
-            ${`${id}@example.test`}, ${getSql().json(meta as never)})
-  `;
-  created.push(id);
-  return id;
-}
+/** Live checks for the profiles table, trigger and RLS. */
 
 async function displayName(id: string): Promise<string | undefined> {
   const rows = await getSql()`
     select display_name from public.profiles where id = ${id}
   `;
   return rows[0]?.display_name as string | undefined;
-}
-
-/** Run `fn` as an authenticated user (or anon) inside a rolled-back transaction. */
-async function asRole<T>(
-  role: "authenticated" | "anon",
-  userId: string | null,
-  fn: (tx: ReturnType<typeof getSql>) => Promise<T>,
-): Promise<T> {
-  const rollback = Symbol("rollback");
-  let result!: T;
-  try {
-    await getSql().begin(async (tx) => {
-      await tx`select set_config('role', ${role}, true)`;
-      if (userId) {
-        await tx`select set_config('request.jwt.claims', ${JSON.stringify({ sub: userId, role })}, true)`;
-      }
-      result = await fn(tx as unknown as ReturnType<typeof getSql>);
-      throw rollback;
-    });
-  } catch (error) {
-    if (error !== rollback) throw error;
-  }
-  return result;
 }
 
 describe.skipIf(!hasDb)("profiles", () => {
@@ -61,9 +22,7 @@ describe.skipIf(!hasDb)("profiles", () => {
   });
 
   afterAll(async () => {
-    if (created.length > 0) {
-      await getSql()`delete from auth.users where id in ${getSql()(created)}`;
-    }
+    await cleanup();
     await closeDb();
   });
 
