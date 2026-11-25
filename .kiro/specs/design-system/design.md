@@ -22,10 +22,10 @@ authority; adjust values from the gallery, not the test):
 | `--color-border`    | `#5B6E99`      | `#6B7BA0` |
 | `--color-text`      | `#F4F7FF`      | `#0B1226` |
 | `--color-muted`     | `#9FB0D0`      | `#44537A` |
-| `--color-accent`    | `#FFC400`      | `#FFC400` |
+| `--color-accent`    | `#3D8BFF`      | `#3D8BFF` |
 | `--color-on-accent` | `#0A0E1A`      | `#0A0E1A` |
-| `--color-accent-ink`| `#FFC400`      | `#7A5A00` |
-| `--color-info`      | `#2DE2E6`      | `#00606B` |
+| `--color-accent-ink`| `#3D8BFF`      | `#0B57D0` |
+| `--color-info`      | `#A99BFF`      | `#4A3CC7` |
 | `--color-danger`    | `#FF6B78`      | `#B3202F` |
 | `--color-success`   | `#3DDC84`      | `#126B38` |
 
@@ -66,7 +66,7 @@ countdowns and pick numbers use `font-variant-numeric: tabular-nums`.
 
 - Panels are dark surfaces with a 1px border and a slight top highlight. Headers use
   a left accent bar.
-- Accent (gold) marks the primary action and the "on the clock" state. Cyan marks
+- Accent (electric blue) marks the primary action and the "on the clock" state. Violet marks
   informational highlights. Red and green are reserved for danger and success.
 - Primary buttons are solid accent with `--color-on-accent` text and a subtle glow on
   hover and focus. Focus rings are 2px accent with a 2px offset, in both schemes.

@@ -119,5 +119,5 @@ As a signed-in user, I get the same frame and navigation on every page.
 
 ## Open
 
-- Final accent color and font pairing. The design starts with the values in
+- Font pairing (the accent is electric blue). The design starts with the values in
   `design.md`; adjust from the gallery.

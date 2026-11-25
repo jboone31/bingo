@@ -19,13 +19,13 @@
   --color-border: #5b6e99;
   --color-text: #f4f7ff;
   --color-muted: #9fb0d0;
-  --color-accent: #ffc400;
+  --color-accent: #3d8bff;
   --color-on-accent: #0a0e1a;
-  --color-accent-ink: #ffc400;
-  --color-info: #2de2e6;
+  --color-accent-ink: #3d8bff;
+  --color-info: #a99bff;
   --color-danger: #ff6b78;
   --color-success: #3ddc84;
-  --glow-accent: 0 0 0 1px rgb(255 196 0 / 40%), 0 0 18px rgb(255 196 0 / 35%);
+  --glow-accent: 0 0 0 1px rgb(61 139 255 / 50%), 0 0 18px rgb(61 139 255 / 45%);
   --shadow-1: 0 1px 2px rgb(0 0 0 / 50%);
   --shadow-2: 0 8px 28px rgb(0 0 0 / 55%);
 }
@@ -39,13 +39,13 @@
     --color-border: #6b7ba0;
     --color-text: #0b1226;
     --color-muted: #44537a;
-    --color-accent: #ffc400;
+    --color-accent: #3d8bff;
     --color-on-accent: #0a0e1a;
-    --color-accent-ink: #7a5a00;
-    --color-info: #00606b;
+    --color-accent-ink: #0b57d0;
+    --color-info: #4a3cc7;
     --color-danger: #b3202f;
     --color-success: #126b38;
-    --glow-accent: 0 0 0 1px rgb(122 90 0 / 40%), 0 0 14px rgb(255 196 0 / 45%);
+    --glow-accent: 0 0 0 1px rgb(11 87 208 / 45%), 0 0 14px rgb(61 139 255 / 45%);
     --shadow-1: 0 1px 2px rgb(11 18 38 / 18%);
     --shadow-2: 0 8px 24px rgb(11 18 38 / 18%);
   }
