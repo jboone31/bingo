@@ -7,6 +7,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { TextField } from "@/components/ui/TextField";
 import { useToast } from "@/components/ui/Toast";
 import { reasonMessage } from "@/lib/leagues/messages";
+import { namesMatch } from "@/lib/leagues/rules";
 import styles from "./ConfirmAction.module.css";
 
 /** Delete needs the league name typed exactly. */
@@ -22,7 +23,7 @@ export function DeleteLeagueDialog({
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
   const [pending, setPending] = useState(false);
-  const matches = typed.trim() === leagueName;
+  const matches = namesMatch(typed, leagueName);
 
   async function remove() {
     setPending(true);
@@ -61,8 +62,11 @@ export function DeleteLeagueDialog({
         <p>
           This removes the league and all of its players. It cannot be undone.
         </p>
+        <p>
+          To confirm, type the league name: <strong>{leagueName}</strong>
+        </p>
         <TextField
-          label={`Type "${leagueName}" to confirm`}
+          label="League name"
           value={typed}
           onChange={(e) => setTyped(e.target.value)}
           autoComplete="off"

@@ -166,11 +166,14 @@ describe("canDelete", () => {
     leagueName: "Office 2026",
   };
 
-  it("needs the exact name", () => {
+  it("needs the name, ignoring case and edge spaces", () => {
     expect(canDelete({ ...base, confirmName: " Office 2026 " })).toEqual({
       ok: true,
     });
-    expect(reason(canDelete({ ...base, confirmName: "office 2026" }))).toBe(
+    expect(canDelete({ ...base, confirmName: "OFFICE 2026" })).toEqual({
+      ok: true,
+    });
+    expect(reason(canDelete({ ...base, confirmName: "Office 202" }))).toBe(
       "confirmation_mismatch",
     );
   });

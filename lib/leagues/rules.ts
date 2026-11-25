@@ -15,6 +15,11 @@ const deny = (reason: string, status: number): RuleResult => ({
   status,
 });
 
+/** Whether a typed league name matches the real one, ignoring case and edge spaces. */
+export function namesMatch(typed: string, actual: string): boolean {
+  return typed.trim().toLowerCase() === actual.toLowerCase();
+}
+
 const notPreDraft = () => deny("league_not_pre_draft", 409);
 const notAdmin = () => deny("not_admin", 403);
 
@@ -72,7 +77,10 @@ export function canTransfer(input: {
   return ALLOWED;
 }
 
-/** Deleting: admin only, only while pre_draft, and the typed name must match. */
+/**
+ * Deleting: admin only, only while pre_draft, and the typed name must match. Case
+ * is ignored because headings display league names in capitals.
+ */
 export function canDelete(input: {
   status: LeagueStatus;
   actorRole: MemberRole;
@@ -81,7 +89,7 @@ export function canDelete(input: {
 }): RuleResult {
   if (input.actorRole !== "admin") return notAdmin();
   if (input.status !== "pre_draft") return notPreDraft();
-  if (input.confirmName.trim() !== input.leagueName) {
+  if (!namesMatch(input.confirmName, input.leagueName)) {
     return deny("confirmation_mismatch", 400);
   }
   return ALLOWED;

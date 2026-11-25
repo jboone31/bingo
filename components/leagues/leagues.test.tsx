@@ -172,7 +172,7 @@ describe("InvitePanel", () => {
 });
 
 describe("DeleteLeagueDialog", () => {
-  it("keeps Delete disabled until the exact name is typed", async () => {
+  it("keeps Delete disabled until the name is typed, in any case", async () => {
     const fetchMock = reply(200, { ok: true });
     vi.stubGlobal("fetch", fetchMock);
     wrap(<DeleteLeagueDialog leagueId="L1" leagueName="Office 2026" />);
@@ -181,12 +181,9 @@ describe("DeleteLeagueDialog", () => {
     );
     const confirm = screen.getByRole("button", { name: "Delete forever" });
     expect(confirm).toBeDisabled();
-    await userEvent.type(
-      screen.getByLabelText(/Type "Office 2026"/),
-      "Office 20",
-    );
+    await userEvent.type(screen.getByLabelText("League name"), "Office 20");
     expect(confirm).toBeDisabled();
-    await userEvent.type(screen.getByLabelText(/Type "Office 2026"/), "26");
+    await userEvent.type(screen.getByLabelText("League name"), "26");
     expect(confirm).toBeEnabled();
     await userEvent.click(confirm);
     expect(fetchMock).toHaveBeenCalledWith(
@@ -194,7 +191,7 @@ describe("DeleteLeagueDialog", () => {
       expect.objectContaining({ method: "DELETE" }),
     );
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
-      confirmName: "Office 2026",
+      confirmName: "OFFICE 2026",
     });
     expect(push).toHaveBeenCalledWith("/");
   });
