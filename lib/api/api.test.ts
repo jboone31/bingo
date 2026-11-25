@@ -116,6 +116,23 @@ describe("handle", () => {
     expect(await res.json()).toEqual({ ok: false, reason: "not_admin" });
   });
 
+  it("logs unexpected errors on the server only", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const route = handle({
+      parse: () => 1,
+      run: async () => {
+        throw Object.assign(new Error("boom"), { code: "23505" });
+      },
+    });
+    const res = await route(req("{}"), ctx);
+    expect(JSON.stringify(await res.json())).not.toContain("boom");
+    expect(spy).toHaveBeenCalledWith(
+      "[api] unexpected error:",
+      "Error [23505]: boom",
+    );
+    spy.mockRestore();
+  });
+
   it("hides unexpected errors", async () => {
     const route = handle({
       parse: () => 1,

@@ -4,6 +4,15 @@ import { getSessionUser, type SessionUser } from "@/lib/auth/session";
 import { ApiError } from "./errors";
 import { fail } from "./response";
 
+/** A short, log-safe description: name, database code and message, no stack. */
+function describeError(error: unknown): string {
+  if (error instanceof Error) {
+    const code = (error as { code?: unknown }).code;
+    return `${error.name}${typeof code === "string" ? ` [${code}]` : ""}: ${error.message}`;
+  }
+  return "non-error value thrown";
+}
+
 interface HandleOptions<I, P> {
   /** Validate the request. Throw {@link ApiError} to reject it. */
   parse: (request: NextRequest, params: P) => I | Promise<I>;
@@ -35,6 +44,8 @@ export function handle<I, P = Record<string, never>>(
       if (error instanceof ApiError) {
         return fail(error.reason, error.status);
       }
+      // Server-side only: the client still gets a generic reason.
+      console.error("[api] unexpected error:", describeError(error));
       return fail("internal_error", 500);
     }
   };
