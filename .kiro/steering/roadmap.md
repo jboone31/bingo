@@ -143,6 +143,11 @@ single rows, or clear the pool. See `.kiro/specs/pool/`.
 - The pool browser (filter and sort) and the draggable queue are shared components in
   `components/`, built here and reused by the draft room in F8.
 
+Decided: category filter ignores capitalization, plus text search and sort; queues
+hold individual rows (200 max), are private to their owner, and are cleaned up when a
+square, member or league is deleted; re-ordering by drag handle and by buttons; editable
+while `pre_draft` (F7 extends it). See `.kiro/specs/queue/`.
+
 ## F5: Realtime and event log
 
 - An append-only, ordered event log for league and draft activity.
