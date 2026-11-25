@@ -6,11 +6,16 @@ for behavior. Specs refine them but should not contradict them. Items marked
 
 ## Leagues And Membership
 
-- Anyone signed in can create a league and becomes its admin.
+- Anyone signed in can create a league and becomes its admin. The admin also
+  plays: they are a member and count in `N`.
 - Others join through an invite link or join code and are regular players.
 - A player can be in many leagues.
 - Joining is allowed only before the draft starts. After the start, nobody can join.
 - A league runs one draft.
+- A league has a status: `pre_draft`, `drafting`, `in_progress`. It only moves
+  forward. `in_progress` begins when boards are generated at the end of the draft.
+- A player can leave a league during `pre_draft`. The admin cannot leave without
+  transferring admin (optional for the MVP) or deleting the league.
 
 ## Submission Pool
 
@@ -19,7 +24,7 @@ for behavior. Specs refine them but should not contradict them. Items marked
 - Each submission has text, a submitter (free text set by the admin), and a category.
 - The admin can bulk-load by CSV (columns: submission text, submitter, category) or
   add one at a time. A league can be created with an empty pool.
-- Submitter names are visible to players **(assumption)**.
+- Submitter names are always visible to players.
 
 ## Pre-Draft
 
@@ -39,7 +44,8 @@ for behavior. Specs refine them but should not contradict them. Items marked
   3 groups need 125.
 - On start, members are split at random into `G` groups whose sizes differ by at most
   one (each group has `floor(N / G)` or `ceil(N / G)` players).
-- Each group receives its own full copy of the pool.
+- Each group drafts from the full pool. A square is available in a group until it is
+  picked there. No rows are copied per group.
 
 ## The Draft
 
@@ -69,6 +75,7 @@ for behavior. Specs refine them but should not contradict them. Items marked
 - A player's round-1 pick goes in the **center square**.
 - For rounds 2 to 25, each round maps to one board position. The mapping is the same
   for every player. Which round lands on which position is random.
-- Whether the random mapping is chosen once per league or once per group is undecided.
+- The mapping is chosen once per league, when boards are generated, and is hidden
+  from players until then.
 - Players view their card, export it as a PNG, and can export the full draft results
   as CSV. The CSV is for the admin's analysis.

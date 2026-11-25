@@ -31,8 +31,8 @@ change it later.
   CSV upload (submission text, submitter, category) or one at a time. Each
   submission has a free-text submitter name set by the admin.
 - **Draft group**: a league's members are split into N groups. Each group drafts at
-  the same time from its own copy of the pool, so the same square can be drafted once
-  per group.
+  the same time from the same pool, so the same square can be drafted once per
+  group.
 - **Queue**: a player's personal ranked list of squares they want. It drives
   auto-picks and is editable before and during the draft.
 - **Board**: a 5x5 card generated for each player after every group finishes.
@@ -63,10 +63,8 @@ change it later.
 
 ## Open Product Questions
 
-- Does the admin also play in their own league?
-- Can admin rights transfer, and can a league be deleted?
+- Can a league be deleted, and by whom? (Admin transfer is optional for the MVP.)
 - Does the draft date do anything beyond being displayed?
-- Should submitter names be hidden from players until the draft ends?
 
 ---
 

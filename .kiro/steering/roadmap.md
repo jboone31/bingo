@@ -68,6 +68,8 @@ Decided: the profile stores the Google full name at first sign-in (else
 - Mobile-first layout rules, plus the rules for the big-screen view.
 - Rough wireframes (markdown or ASCII) for home, league, pre-draft, draft room, big
   screen and board. Per-feature layout detail stays in each feature's spec.
+- Shared date and time formatting: times are stored as `timestamptz` and shown in
+  each viewer's own time zone.
 - Restyle the F1 screens (sign-in, profile, home) with the new components.
 
 Open: CSS approach, visual style, light/dark.
@@ -79,8 +81,18 @@ Open: CSS approach, visual style, light/dark.
 - Invite by link or join code. Joining adds the player as a regular member.
 - A league view that shows the pre-draft flow until the draft starts.
 - Block joining once the draft has started.
+- League status, one field used by every later feature: `pre_draft`, `drafting`,
+  `in_progress`. Enforced in the database. Changes only move forward.
+- Players can leave a league during `pre_draft`. The admin cannot leave without first
+  transferring admin or deleting the league.
+- Admin transfer to another member, if it stays small (one transaction, one route).
+  Not required for the MVP.
+- First task: extract `lib/api/` (JSON body parsing, the `{ ok, reason }` response
+  shape, an auth wrapper) from the F1 routes, and use it for every new route.
 
-Open: admin transfer, league deletion, whether the admin plays.
+Decided: the admin also plays, so they count in `N`. See `draft-rules.md`.
+
+Open: league deletion (whether it exists and who can do it).
 
 ## F2.5: Dev tooling and seed scenarios
 
@@ -95,8 +107,9 @@ Open: admin transfer, league deletion, whether the admin plays.
 - Shared integration-test helpers (create user, league, members), replacing the
   inline helper in `test/integration/profiles.integration.test.ts`.
 
-Open: one Supabase project or a separate dev project (also an open question in
-`tech.md`).
+Decided: one Supabase project, no separate dev database. The safety rules above
+are therefore mandatory, and seeded users and leagues are tagged so they can be
+removed cleanly.
 
 ## F3: Pool administration
 
@@ -105,6 +118,9 @@ Open: one Supabase project or a separate dev project (also an open question in
 - Add a single submission.
 - Edit, remove, and recategorize submissions during pre-draft.
 - Creating a league with no CSV gives an empty pool.
+
+Decided: submitter names are always visible to players, so no column hiding is
+needed in the pool read path.
 
 Open: duplicate handling on upload, whether a re-upload replaces or appends.
 
@@ -115,16 +131,21 @@ Open: duplicate handling on upload, whether a re-upload replaces or appends.
 - Add a submission to the personal queue from the pool.
 - Drag to re-rank the queue, usable on touch screens.
 - Show the draft date to everyone.
+- The pool browser (filter and sort) and the draggable queue are shared components in
+  `components/`, built here and reused by the draft room in F8.
 
 ## F5: Realtime and event log
 
 - An append-only, ordered event log for league and draft activity.
 - Subscribing clients fold events into one view, with reconnect and catch-up.
-- Access rules so members see their league and group players see their own group's
-  events.
+- Access rules so members see their league's events. The event log ships with
+  league-level events only. F7 adds group-scoped events and their access rules once
+  draft groups exist (F6).
 - A shared way for clients to know server time.
 
-Open: how groups map onto channels and access rules.
+Decided: group scoping is deferred to F7. F5 does not depend on F6.
+
+Open: how groups map onto channels and access rules (answered in F7).
 
 ## F6: Draft setup and start
 
@@ -132,18 +153,26 @@ Open: how groups map onto channels and access rules.
 - Admin sets the per-pick timer (default 60 seconds).
 - The minimum pool size, `ceil(N / G) x 25`, is shown live and blocks the start.
 - Start with an explicit confirmation.
-- On start: lock joining, split members into balanced random groups, give each group
-  its pool copy, and set random snake order per group.
+- On start: set the league status to `drafting` (which locks joining), split members
+  into balanced random groups, and set random snake order per group. The pool is not
+  copied: each group drafts from the league's submissions, and availability is the
+  absence of a pick in that group.
+- A league with fewer members than groups cannot start.
 
 ## F7: Draft engine and timers
 
 - Turn order per group, a deadline per turn, and picks that respect availability.
+  A pick is unique on `(group_id, submission_id)`, so the database refuses a second
+  pick of the same square in one group.
+- Group-scoped events and their access rules, and the answer to how groups map onto
+  Realtime channels.
 - One idempotent settle operation for expired turns, including cascades across
   several expired turns.
 - Auto-pick from the queue, else random.
 - Triggers: client nudges, every pick or queue write, and a seconds-level `pg_cron`
   backstop.
-- Draft completion per group, and detection that all groups are done.
+- Draft completion per group, and detection that all groups are done. The last pick
+  of the last group calls board generation (F10) in the same transaction.
 - Dev controls (dev flag only): shorten the pick timer, expire the current deadline
   on demand, and let bots pick for chosen players, so the draft room can be tested
   without waiting.
@@ -155,7 +184,7 @@ Open: how groups map onto channels and access rules.
 - My picks so far, and confirmed picks of other players. Own group is shown apart from
   other groups.
 - Search the pool to find where a square ended up.
-- Turn indicator and countdown.
+- Turn indicator and countdown. The round-to-square mapping is not shown.
 - A live banner with the latest event.
 
 Open: whether the banner is group-wide or league-wide.
@@ -167,12 +196,16 @@ Open: whether the banner is group-wide or league-wide.
 
 ## F10: Board generation
 
-- Runs when all groups are done.
-- Round-1 pick goes in the center. Other rounds map to positions at random, the same
-  for every player.
+- Runs in the same transaction as the final pick of the last group. It also moves
+  the league from `drafting` to `in_progress`, so boards exist the moment the draft
+  ends.
+- Round-1 pick goes in the center. Other rounds map to positions at random, once
+  per league, the same for every player.
+- The mapping is generated at this point, not at draft start, and is hidden until
+  then, so nobody can draft around it.
 - Boards are stored so they do not change after generation.
 
-Open: whether the random mapping is per league or per group.
+Decided: the mapping is per league and stays hidden until boards are generated.
 
 ## F11: Board view and export
 

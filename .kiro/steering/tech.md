@@ -79,7 +79,7 @@ are data, not session state.
 
 - How draft groups map onto Realtime channels and RLS policies.
 - Whether PNG export is done in the browser or on the server.
-- Production Supabase project versus a single shared project.
+- Resolved: a single shared Supabase project. Dev tooling is guarded by an env flag.
 
 ---
 
