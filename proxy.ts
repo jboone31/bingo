@@ -1,5 +1,4 @@
 import { type NextRequest } from "next/server";
-
 import { createClient } from "@/utils/supabase/middleware";
 
 /** Next.js 16 `proxy` (formerly `middleware`): runs before every matched request. */

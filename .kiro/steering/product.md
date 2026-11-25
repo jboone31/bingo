@@ -17,6 +17,12 @@ generation.
   creator; everyone who joins later is a regular player. (Admin transfer is not
   decided yet.)
 
+## Display Names
+
+A profile always has a display name. It defaults to the Google full name, copied at
+first sign-in (else `Player` plus four characters of the user id), and the user can
+change it later.
+
 ## Core Concepts
 
 - **League**: one annual draft with its own members, submission pool, draft date and

@@ -1,20 +1,16 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
-
+import { decideAccess } from "@/lib/auth/access";
 import { getPublicEnv } from "@/lib/env";
 
 /**
- * Builds the Supabase client for middleware and returns the response carrying
- * any cookies it sets.
- *
- * Session refresh (calling `auth.getClaims()` here) is added with the auth
- * feature (F1). Until then this passes requests through unchanged.
+ * Refreshes the Supabase session for a request and applies route access rules.
+ * Every returned response carries any cookies the refresh set.
  */
-export const createClient = (request: NextRequest) => {
+export const createClient = async (request: NextRequest) => {
   let supabaseResponse = NextResponse.next({ request });
-
   const { supabaseUrl, supabaseKey } = getPublicEnv();
-  createServerClient(supabaseUrl, supabaseKey, {
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
     cookies: {
       getAll() {
         return request.cookies.getAll();
@@ -31,5 +27,30 @@ export const createClient = (request: NextRequest) => {
     },
   });
 
-  return supabaseResponse;
+  // Verifies the JWT and refreshes the cookie. Any failure counts as signed out.
+  let isAuthenticated = false;
+  try {
+    const { data, error } = await supabase.auth.getClaims();
+    isAuthenticated = !error && typeof data?.claims?.sub === "string";
+  } catch {
+    isAuthenticated = false;
+  }
+
+  const { pathname, search } = request.nextUrl;
+  const decision = decideAccess(pathname, isAuthenticated, search);
+
+  if (decision.kind === "allow") {
+    return supabaseResponse;
+  }
+  const response =
+    decision.kind === "unauthorized"
+      ? NextResponse.json(
+          { ok: false, reason: "unauthenticated" },
+          { status: 401 },
+        )
+      : NextResponse.redirect(new URL(decision.to, request.url));
+  supabaseResponse.cookies.getAll().forEach((cookie) => {
+    response.cookies.set(cookie);
+  });
+  return response;
 };

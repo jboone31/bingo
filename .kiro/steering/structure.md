@@ -12,6 +12,7 @@ a top-level directory._
 Bingo/
   app/              # Next.js App Router: pages, layouts, API route handlers
   lib/              # framework-free shared logic (domain rules, data access, env)
+  components/       # shared React components
   utils/            # Supabase client factories (browser, server, proxy)
   supabase/         # database migrations
   scripts/          # ops scripts run manually with node (migrations, DB checks)
@@ -39,8 +40,14 @@ property-tested in isolation. Current modules:
 
 - `env/`: environment loading and validation.
 - `db/`: the transaction-capable server database helper (server-only).
+- `auth/`: sign-in redirect safety, route access rules, server session lookup.
+- `profile/`: display name validation, profile read and update.
 
 New domain areas (leagues, pool, draft, board) get their own folder here.
+
+### `components/`
+
+Shared React components (sign-in button, sign-out button, display name form).
 
 ### `utils/supabase/`
 
@@ -67,7 +74,5 @@ Node scripts run manually against the live Supabase project. They load `.env.loc
 
 ## Where Things Go Next
 
-- Shared React components go in a top-level `components/` directory, created by the
-  first feature that needs one. Add it to the layout block when it exists.
 - Static assets go in `public/`, created when the first one is needed.
 - Specs live in `.kiro/specs/<feature>/`.

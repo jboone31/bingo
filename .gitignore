@@ -9,3 +9,12 @@ tsconfig.tsbuildinfo
 .gitconfig
 .vercel
 coverage
+
+# OS and editor noise
+.DS_Store
+*.log
+npm-debug.log*
+
+# Build caches and keys
+*.tsbuildinfo
+*.pem

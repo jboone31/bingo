@@ -28,7 +28,7 @@ written and features ship.
 | #   | Feature                         | Depends on     | Status      |
 | --- | ------------------------------- | -------------- | ----------- |
 | F0  | Foundation (scaffold, steering) | none           | Done        |
-| F1  | Auth and profiles               | F0             | Not started |
+| F1  | Auth and profiles               | F0             | Done        |
 | F2  | Leagues                         | F1             | Not started |
 | F3  | Pool administration             | F2             | Not started |
 | F4  | Pre-draft pool and queue        | F2, F3         | Not started |
@@ -52,7 +52,8 @@ health route, test tooling, and these steering files.
 - Session handling across server and browser, and protected routes.
 - Sign out.
 
-Open: what name shows when a display name is not set.
+Decided: the profile stores the Google full name at first sign-in (else
+`Player xxxx`). See `.kiro/specs/auth-and-profiles/`.
 
 ## F2: Leagues
 

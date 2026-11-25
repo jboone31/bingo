@@ -134,6 +134,11 @@ create trigger on_auth_user_created
 commit;
 ```
 
+Migration `0003_profiles_grants.sql` grants `select` on `profiles` to
+`authenticated` only. This project does not grant new public tables to API roles by
+default, so the policy alone gave "permission denied". Found by the integration
+tests.
+
 Notes:
 
 - `profiles.id` is the auth user id rather than a generated uuid. This is a
