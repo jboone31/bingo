@@ -17,7 +17,12 @@ describe("decideAccess", () => {
   });
 
   it("allows public paths without a session", () => {
-    for (const path of ["/sign-in", "/api/health", "/api/auth/callback"]) {
+    for (const path of [
+      "/sign-in",
+      "/api/health",
+      "/api/auth/callback",
+      "/api/dev/sign-in",
+    ]) {
       expect(decideAccess(path, false)).toEqual({ kind: "allow" });
     }
   });

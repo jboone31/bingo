@@ -102,6 +102,21 @@ Depends on F2. Rules referenced: `conventions.md` (Dev Scenarios), `tech.md`
    safety rules.
 2. Later specs list the scenarios they need; F3 onward add them as a task.
 
+### R8. Dev sign-in (added after F2.5 shipped)
+
+Google sign-in from a phone on the local network failed because Supabase would not
+accept the LAN address as a redirect URL. So that a real device can still be tested:
+
+1. When dev tools are enabled and the page is loaded from a local or private-network
+   address, the sign-in page also offers "Dev sign-in": a list of seed players and a
+   button that signs in as the chosen one, with no Google redirect.
+2. `POST /api/dev/sign-in` works without a session. It returns 404 unless dev tools
+   are enabled (never on Vercel Production) **and** the request's Host is local or
+   private (`localhost`, `*.local`, `127.*`, `10.*`, `192.168.*`, `172.16-31.*`).
+3. It can only sign in as seed players. The target is re-checked in the database.
+4. Never set `ENABLE_DEV_TOOLS` on Preview or Production: on a hosted preview the
+   public hostname is refused, but the flag should not be on at all.
+
 ## Out Of Scope
 
 - A command-line seeding tool.

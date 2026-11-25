@@ -9,7 +9,13 @@ export type AccessDecision =
 
 export const SIGN_IN_PATH = "/sign-in";
 
-const PUBLIC_EXACT: readonly string[] = [SIGN_IN_PATH, "/api/health"];
+// `/api/dev/sign-in` is public so the sign-in page can use it, but the route returns
+// 404 unless dev tools are enabled and the request is from a private address.
+const PUBLIC_EXACT: readonly string[] = [
+  SIGN_IN_PATH,
+  "/api/health",
+  "/api/dev/sign-in",
+];
 const PUBLIC_PREFIXES: readonly string[] = ["/api/auth/"];
 
 function isPublic(pathname: string): boolean {

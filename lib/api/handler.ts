@@ -13,6 +13,15 @@ function describeError(error: unknown): string {
   return "non-error value thrown";
 }
 
+function toErrorResponse(error: unknown): NextResponse {
+  if (error instanceof ApiError) {
+    return fail(error.reason, error.status);
+  }
+  // Server-side only: the client still gets a generic reason.
+  console.error("[api] unexpected error:", describeError(error));
+  return fail("internal_error", 500);
+}
+
 interface HandleOptions<I, P> {
   /** Validate the request. Throw {@link ApiError} to reject it. */
   parse: (request: NextRequest, params: P) => I | Promise<I>;
@@ -41,12 +50,29 @@ export function handle<I, P = Record<string, never>>(
       }
       return await options.run({ user, input });
     } catch (error) {
-      if (error instanceof ApiError) {
-        return fail(error.reason, error.status);
-      }
-      // Server-side only: the client still gets a generic reason.
-      console.error("[api] unexpected error:", describeError(error));
-      return fail("internal_error", 500);
+      return toErrorResponse(error);
+    }
+  };
+}
+
+interface HandlePublicOptions<I> {
+  /** Validate the request and enforce any gate. Throw {@link ApiError} to reject. */
+  parse: (request: NextRequest) => I | Promise<I>;
+  run: (args: { input: I }) => Promise<NextResponse>;
+}
+
+/**
+ * For the rare route that must work without a session (the dev-only sign-in). Same
+ * error mapping as {@link handle}. Every use must gate itself in `parse` and be listed
+ * in `lib/auth/access.ts`.
+ */
+export function handlePublic<I>(options: HandlePublicOptions<I>) {
+  return async (request: NextRequest): Promise<NextResponse> => {
+    try {
+      const input = await options.parse(request);
+      return await options.run({ input });
+    } catch (error) {
+      return toErrorResponse(error);
     }
   };
 }

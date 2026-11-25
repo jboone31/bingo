@@ -6,7 +6,7 @@ vi.mock("@/lib/auth/session", () => ({ getSessionUser }));
 
 import { readJsonObject } from "./body";
 import { ApiError } from "./errors";
-import { handle } from "./handler";
+import { handle, handlePublic } from "./handler";
 import { parseUuid } from "./ids";
 import { fail, ok } from "./response";
 
@@ -156,5 +156,39 @@ describe("handle", () => {
       params: Promise.resolve({ id: "abc" }),
     });
     expect(await res.json()).toEqual({ ok: true, input: "abc" });
+  });
+});
+
+describe("handlePublic", () => {
+  it("runs without a session", async () => {
+    getSessionUser.mockReset();
+    const route = handlePublic({
+      parse: () => 7,
+      run: async ({ input }) => ok({ input }),
+    });
+    const res = await route(req("{}"));
+    expect(await res.json()).toEqual({ ok: true, input: 7 });
+    expect(getSessionUser).not.toHaveBeenCalled();
+  });
+
+  it("maps ApiError and hides unexpected errors", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const gated = handlePublic({
+      parse: () => {
+        throw new ApiError("not_found", 404);
+      },
+      run: async () => ok(),
+    });
+    expect((await gated(req("{}"))).status).toBe(404);
+    const broken = handlePublic({
+      parse: () => 1,
+      run: async () => {
+        throw new Error("password=hunter2");
+      },
+    });
+    const res = await broken(req("{}"));
+    expect(res.status).toBe(500);
+    expect(JSON.stringify(await res.json())).not.toContain("hunter2");
+    spy.mockRestore();
   });
 });

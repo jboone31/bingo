@@ -46,8 +46,9 @@ run), `.../[submissionId]` (edit, delete). Page: `(app)/leagues/[leagueId]/pool`
 
 ### Dev routes
 
-`app/api/dev/` (`seed`, `reset`, `act-as`) and the `(app)/dev` page. All return 404
-unless dev tools are enabled.
+`app/api/dev/` (`seed`, `reset`, `act-as`, `sign-in`) and the `(app)/dev` page. All
+return 404 unless dev tools are enabled. `sign-in` works without a session and also
+requires a local or private-network host; the sign-in page shows it as "Dev sign-in".
 
 ### League routes
 

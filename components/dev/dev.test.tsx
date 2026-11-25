@@ -15,6 +15,7 @@ vi.mock("next/navigation", () => ({
 import { AppHeader } from "@/components/shell/AppHeader";
 import { ToastProvider } from "@/components/ui/Toast";
 import { DevBanner } from "./DevBanner";
+import { DevSignIn } from "./DevSignIn";
 import { DevTools } from "./DevTools";
 
 const reply = (status: number, body: unknown) =>
@@ -133,5 +134,47 @@ describe("dev banner", () => {
     expect(
       screen.getByText("Dev: acting as Seed Player 003"),
     ).toBeInTheDocument();
+  });
+});
+
+describe("DevSignIn", () => {
+  it("is disabled until a player is chosen, then signs in and goes to next", async () => {
+    const fetchMock = reply(200, { ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+    render(
+      <ToastProvider>
+        <DevSignIn users={users} next="/leagues/L1" />
+      </ToastProvider>,
+    );
+    const button = screen.getByRole("button", { name: "Sign in as player" });
+    expect(button).toBeDisabled();
+    await userEvent.selectOptions(screen.getByLabelText("Seed player"), "u2");
+    expect(button).toBeEnabled();
+    await userEvent.click(button);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/dev/sign-in",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      userId: "u2",
+    });
+    expect(push).toHaveBeenCalledWith("/leagues/L1");
+  });
+
+  it("shows a toast and stays put when sign-in fails", async () => {
+    vi.stubGlobal("fetch", reply(404, { ok: false, reason: "not_found" }));
+    render(
+      <ToastProvider>
+        <DevSignIn users={users} next="/" />
+      </ToastProvider>,
+    );
+    await userEvent.selectOptions(screen.getByLabelText("Seed player"), "u1");
+    await userEvent.click(
+      screen.getByRole("button", { name: "Sign in as player" }),
+    );
+    expect(
+      await screen.findByText("Could not sign in as that player."),
+    ).toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
   });
 });
