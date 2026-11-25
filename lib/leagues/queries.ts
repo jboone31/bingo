@@ -155,6 +155,8 @@ export async function createLeague(
     draftAt: string | null;
     userId: string;
     requestId: string;
+    /** Set only by dev tools, so reset can find the league. */
+    seedScenario?: string;
   },
 ): Promise<{ id: string; created: boolean }> {
   const existing = async () => {
@@ -172,11 +174,19 @@ export async function createLeague(
 
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const { rows } = await tx.query(
-      `insert into public.leagues (name, draft_at, join_code, created_by, create_key)
-       values ($1, $2, $3, $4, $5)
+      `insert into public.leagues
+         (name, draft_at, join_code, created_by, create_key, seed_scenario)
+       values ($1, $2, $3, $4, $5, $6)
        on conflict do nothing
        returning id`,
-      [input.name, input.draftAt, newCode(), input.userId, input.requestId],
+      [
+        input.name,
+        input.draftAt,
+        newCode(),
+        input.userId,
+        input.requestId,
+        input.seedScenario ?? null,
+      ],
     );
     if (rows[0]) {
       const id = String(rows[0].id);

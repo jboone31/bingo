@@ -111,4 +111,29 @@ describe("isDevToolsEnabled", () => {
     expect(isDevToolsEnabled({ ENABLE_DEV_TOOLS: "0" })).toBe(false);
     expect(isDevToolsEnabled({})).toBe(false);
   });
+
+  it("is off on Vercel Production even with the flag set", () => {
+    expect(
+      isDevToolsEnabled({ ENABLE_DEV_TOOLS: "1", VERCEL_ENV: "production" }),
+    ).toBe(false);
+    for (const env of ["preview", "development", undefined]) {
+      expect(
+        isDevToolsEnabled({ ENABLE_DEV_TOOLS: "1", VERCEL_ENV: env }),
+      ).toBe(true);
+    }
+  });
+
+  it("is never true when VERCEL_ENV is production", () => {
+    fc.assert(
+      fc.property(fc.string(), (flag) => {
+        expect(
+          isDevToolsEnabled({
+            ENABLE_DEV_TOOLS: flag,
+            VERCEL_ENV: "production",
+          }),
+        ).toBe(false);
+      }),
+      { numRuns: 100 },
+    );
+  });
 });

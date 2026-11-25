@@ -1,13 +1,10 @@
-import { notFound } from "next/navigation";
-import { isDevToolsEnabled } from "@/lib/env";
+import { assertDevToolsPage } from "@/lib/dev/gate";
 import { Gallery } from "./Gallery";
 
 export const dynamic = "force-dynamic";
 
-/** Component gallery. 404 unless ENABLE_DEV_TOOLS=1. */
+/** Component gallery. 404 unless dev tools are enabled. */
 export default function ComponentsPage() {
-  if (!isDevToolsEnabled()) {
-    notFound();
-  }
+  assertDevToolsPage();
   return <Gallery />;
 }

@@ -33,7 +33,7 @@ written and features ship.
 | F1  | Auth and profiles               | F0             | Done        |
 | F1.5 | Design system and app shell    | F1             | Done        |
 | F2  | Leagues                         | F1.5           | Done        |
-| F2.5 | Dev tooling and seed scenarios | F2             | Not started |
+| F2.5 | Dev tooling and seed scenarios | F2             | Done        |
 | F3  | Pool administration             | F2             | Not started |
 | F4  | Pre-draft pool and queue        | F2, F3         | Not started |
 | F5  | Realtime and event log          | F2             | Not started |
@@ -99,9 +99,9 @@ limit for now. See `.kiro/specs/leagues/`.
 
 ## F2.5: Dev tooling and seed scenarios
 
-- `npm run db:seed -- --scenario=<name>` builds a league in a chosen state: empty
-  pool, ready to start, mid-draft, finished with boards. Scenarios are added by the
-  feature that introduces the state.
+- A `/dev` page that builds a league in a chosen state: empty, with players, full,
+  or viewed as a regular member. Scenarios are data in `lib/dev/scenarios.ts`, and
+  each feature adds the states it introduces.
 - Fake users and a dev-only "act as" switcher, so one person can test several roles
   without Google accounts.
 - Reset one scenario league without touching real data.

@@ -116,9 +116,13 @@ export function requireCronSecret(source: EnvSource = process.env): string {
 }
 
 /**
- * True only when `ENABLE_DEV_TOOLS=1`. Gates the component gallery and later the
- * seed and "act as" tools. Never set it on Vercel Production.
+ * True only when `ENABLE_DEV_TOOLS=1` and Vercel does not report the environment as
+ * `production`. Two independent checks: setting the flag by mistake on Production
+ * still leaves the tools off. Gates the component gallery, seed scenarios and "act
+ * as".
  */
 export function isDevToolsEnabled(source: EnvSource = process.env): boolean {
-  return source[DEV_TOOLS_VAR]?.trim() === "1";
+  return (
+    source[DEV_TOOLS_VAR]?.trim() === "1" && source.VERCEL_ENV !== "production"
+  );
 }

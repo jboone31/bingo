@@ -94,9 +94,13 @@ say so in the spec and update this file.
 ## Dev Scenarios
 
 - Each feature lists the states it needs to be tested in (for example "pool full,
-  ready to start") and adds them as seed scenarios in `scripts/seed/`.
-- Dev-only routes, seeds and the "act as" switcher run only when an explicit env flag
-  is set and never in production. Seeded rows are tagged so reset removes only them.
+  ready to start") and adds them as entries in `lib/dev/scenarios.ts`, run by
+  `lib/dev/seedScenario.ts`. The `/dev` page and routes read that registry.
+- Every dev entry point goes through `isDevToolsEnabled()`: `ENABLE_DEV_TOOLS=1` and
+  `VERCEL_ENV` not `production`. Never set the flag on Vercel Production.
+- Dev code touches only leagues with a `seed_scenario` tag and users that pass
+  `isSeedUser` (reserved `seed-player-NNN@bingo-seed.test` email and a seed flag).
+  Scenarios build state through the real tables and triggers.
 - UI behavior is checked against a seeded scenario, not by building a league by hand.
 
 ## Done Means

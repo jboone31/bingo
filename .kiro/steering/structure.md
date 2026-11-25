@@ -39,6 +39,11 @@ under `app/api/`. Tests are co-located with the file they cover.
   do not include `(app)`. `sign-in/` sits outside it and has its own layout.
 - `(app)/dev/components/`: component gallery, 404 unless `ENABLE_DEV_TOOLS=1`.
 
+### Dev routes
+
+`app/api/dev/` (`seed`, `reset`, `act-as`) and the `(app)/dev` page. All return 404
+unless dev tools are enabled.
+
 ### League routes
 
 `app/api/leagues/` (create, join), `[leagueId]/` (delete), `[leagueId]/leave`,
@@ -71,6 +76,8 @@ property-tested in isolation. Current modules:
 - `format/`: date and time formatting (viewer's time zone).
 - `api/`: route helpers (`handle`, `readJsonObject`, `parseUuid`, `ok`/`fail`,
   `ApiError`). Server-only.
+- `dev/`: dev-only tools: gate, seed identity, scenario registry, seeding, reset and
+  act-as. Server parts are server-only.
 - `leagues/`: league rules and validation (pure), SQL (`queries.ts`), RLS reads
   (`read.ts`), and route guards. Player-facing error text is in `messages.ts`.
 
@@ -83,6 +90,7 @@ Shared React components.
 - `ui/`: the design system (Button, TextField, Panel, Badge, PageHeader, Dialog,
   Toast, EmptyState, ErrorState, Spinner, Skeleton). Each has a CSS Module and a
   test. Styled only from tokens.
+- `dev/`: dev hub and the "acting as" banner (dev tools only).
 - `leagues/`: league screens' components (cards, forms, member list, invite panel,
   confirm and delete dialogs).
 - `shell/`: the signed-in frame (AppHeader, UserMenu, PageContainer, SubNav).
