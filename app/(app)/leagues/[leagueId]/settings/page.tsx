@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { ConfirmAction } from "@/components/leagues/ConfirmAction";
+import { DraftDateForm } from "@/components/leagues/DraftDateForm";
 import { DeleteLeagueDialog } from "@/components/leagues/DeleteLeagueDialog";
 import { InvitePanel } from "@/components/leagues/InvitePanel";
 import { TransferAdminForm } from "@/components/leagues/TransferAdminForm";
@@ -34,6 +35,14 @@ export default async function LeagueSettingsPage({
     <>
       <PageHeader title="Settings" subtitle={league.name} />
       <div className={styles.stack}>
+        {preDraft ? (
+          <Panel title="Draft date">
+            <DraftDateForm
+              leagueId={leagueId}
+              initialDraftAt={league.draftAt}
+            />
+          </Panel>
+        ) : null}
         {preDraft ? (
           <Panel title="Invite code">
             <div className={styles.stack}>

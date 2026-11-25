@@ -5,11 +5,44 @@ import { parseUuid } from "@/lib/api/ids";
 import { ok } from "@/lib/api/response";
 import { withTransaction } from "@/lib/db/server";
 import { assertAllowed, lockLeagueForMember } from "@/lib/leagues/guard";
-import { deleteLeague } from "@/lib/leagues/queries";
-import { canDelete } from "@/lib/leagues/rules";
+import { parseDraftAt } from "@/lib/leagues/draftAt";
+import { deleteLeague, setDraftAt } from "@/lib/leagues/queries";
+import { canDelete, canSetDraftDate } from "@/lib/leagues/rules";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+/**
+ * PATCH /api/leagues/[leagueId]: the admin sets the draft date, or clears it with
+ * `null`, while the league is pre_draft. Repeating it is harmless.
+ */
+export const PATCH = handle<
+  { leagueId: string; draftAt: string | null },
+  { leagueId: string }
+>({
+  parse: async (request, params) => {
+    const body = await readJsonObject(request, ["draftAt"]);
+    if (!Object.hasOwn(body, "draftAt")) {
+      throw new ApiError("invalid_body", 400);
+    }
+    const draftAt = parseDraftAt(body.draftAt);
+    if (!draftAt.ok) throw new ApiError(draftAt.reason, 400);
+    return { leagueId: parseUuid(params.leagueId), draftAt: draftAt.value };
+  },
+  run: async ({ user, input }) =>
+    withTransaction(async (tx) => {
+      const { league, role } = await lockLeagueForMember(
+        tx,
+        input.leagueId,
+        user.id,
+      );
+      assertAllowed(
+        canSetDraftDate({ status: league.status, actorRole: role }),
+      );
+      await setDraftAt(tx, input.leagueId, input.draftAt);
+      return ok({ draftAt: input.draftAt });
+    }),
+});
 
 /**
  * DELETE /api/leagues/[leagueId]: the admin deletes a pre_draft league by typing its

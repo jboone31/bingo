@@ -119,7 +119,8 @@ removed cleanly.
 
 ## F3: Pool administration
 
-- Admin sets the draft date at creation and can change it before the start.
+- Draft date: set at creation and editable by the admin in league settings before
+  the start. Built in F2; nothing more to do here.
 - CSV upload (submission text, submitter, category), with clear errors for bad rows.
 - Add a single submission.
 - Edit, remove, and recategorize submissions during pre-draft.

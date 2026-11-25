@@ -12,8 +12,10 @@ const { push, refresh } = vi.hoisted(() => ({
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, refresh }) }));
 
 import { ConfirmAction } from "./ConfirmAction";
+import { isoToLocalInput } from "@/lib/format/dateTime";
 import { CreateLeagueForm } from "./CreateLeagueForm";
 import { DeleteLeagueDialog } from "./DeleteLeagueDialog";
+import { DraftDateForm } from "./DraftDateForm";
 import { InvitePanel } from "./InvitePanel";
 import { JoinLeagueForm } from "./JoinLeagueForm";
 import { MemberList } from "./MemberList";
@@ -262,5 +264,58 @@ describe("TransferAdminForm", () => {
       userId: "b",
     });
     expect(push).toHaveBeenCalledWith("/leagues/L1");
+  });
+});
+
+describe("DraftDateForm", () => {
+  it("prefills the local value and saves an ISO timestamp", async () => {
+    const fetchMock = reply(200, { ok: true, draftAt: "x" });
+    vi.stubGlobal("fetch", fetchMock);
+    wrap(
+      <DraftDateForm leagueId="L1" initialDraftAt="2026-03-01T19:00:00.000Z" />,
+    );
+    const field = screen.getByLabelText("Draft date") as HTMLInputElement;
+    expect(field.value).toBe(isoToLocalInput("2026-03-01T19:00:00.000Z"));
+    await userEvent.clear(field);
+    await userEvent.type(field, "2026-04-02T20:30");
+    await userEvent.click(screen.getByRole("button", { name: "Save date" }));
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/leagues/L1",
+      expect.objectContaining({ method: "PATCH" }),
+    );
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      draftAt: new Date("2026-04-02T20:30").toISOString(),
+    });
+    expect(await screen.findByText("Draft date saved.")).toBeInTheDocument();
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("sends null when the field is emptied", async () => {
+    const fetchMock = reply(200, { ok: true, draftAt: null });
+    vi.stubGlobal("fetch", fetchMock);
+    wrap(
+      <DraftDateForm leagueId="L1" initialDraftAt="2026-03-01T19:00:00.000Z" />,
+    );
+    await userEvent.clear(screen.getByLabelText("Draft date"));
+    await userEvent.click(screen.getByRole("button", { name: "Save date" }));
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      draftAt: null,
+    });
+    expect(await screen.findByText("Draft date cleared.")).toBeInTheDocument();
+  });
+
+  it("shows a server rejection under the field", async () => {
+    vi.stubGlobal(
+      "fetch",
+      reply(400, { ok: false, reason: "invalid_draft_at" }),
+    );
+    wrap(<DraftDateForm leagueId="L1" initialDraftAt={null} />);
+    await userEvent.type(
+      screen.getByLabelText("Draft date"),
+      "2026-04-02T20:30",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Save date" }));
+    expect(await screen.findByText(/valid date and time/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Draft date")).toBeInvalid();
   });
 });

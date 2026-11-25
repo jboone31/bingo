@@ -67,6 +67,16 @@ export function canRegenerateCode(input: {
   return ALLOWED;
 }
 
+/** Changing the draft date: admin only, only while pre_draft. */
+export function canSetDraftDate(input: {
+  status: LeagueStatus;
+  actorRole: MemberRole;
+}): RuleResult {
+  if (input.actorRole !== "admin") return notAdmin();
+  if (input.status !== "pre_draft") return notPreDraft();
+  return ALLOWED;
+}
+
 /** Transferring admin: admin only, to a current member, in any status. */
 export function canTransfer(input: {
   actorRole: MemberRole;

@@ -5,6 +5,7 @@ import {
   canJoin,
   canLeave,
   canRegenerateCode,
+  canSetDraftDate,
   canRemove,
   canTransfer,
 } from "./rules";
@@ -188,6 +189,19 @@ describe("canDelete", () => {
           confirmName: "X",
         });
         expect(result.ok).toBe(s === "pre_draft" && r === "admin");
+      }),
+      { numRuns: 100 },
+    );
+  });
+});
+
+describe("canSetDraftDate", () => {
+  it("admin pre_draft only", () => {
+    fc.assert(
+      fc.property(status, role, (s, r) => {
+        expect(canSetDraftDate({ status: s, actorRole: r }).ok).toBe(
+          s === "pre_draft" && r === "admin",
+        );
       }),
       { numRuns: 100 },
     );

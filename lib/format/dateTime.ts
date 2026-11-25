@@ -37,6 +37,42 @@ export function formatDateTime(
   }
 }
 
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+/**
+ * `Dec 2, 2026, 6:58 PM UTC`, built by hand so the text is identical on the server
+ * and in every browser. `Intl` output differs between ICU versions (for example
+ * ", " versus " at "), which breaks hydration when it is used for server-rendered
+ * text. Use this for anything rendered on the server; use {@link formatDateTime}
+ * for text produced only in the browser.
+ */
+export function formatUtcStable(iso: string): string {
+  const date = new Date(iso);
+  if (typeof iso !== "string" || Number.isNaN(date.getTime())) {
+    return INVALID_DATE;
+  }
+  const hours = date.getUTCHours();
+  const hour12 = hours % 12 === 0 ? 12 : hours % 12;
+  const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+  return (
+    `${MONTHS[date.getUTCMonth()]} ${date.getUTCDate()}, ${date.getUTCFullYear()}, ` +
+    `${hour12}:${minutes} ${hours < 12 ? "AM" : "PM"} UTC`
+  );
+}
+
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /** The `YYYY-MM-DDTHH:mm` value for a `datetime-local` input, in local time. */

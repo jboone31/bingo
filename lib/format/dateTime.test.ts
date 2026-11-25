@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   INVALID_DATE,
   formatDateTime,
+  formatUtcStable,
   isoToLocalInput,
   localInputToIso,
 } from "./dateTime";
@@ -71,6 +72,52 @@ describe("datetime-local helpers", () => {
           expect(isoToLocalInput(iso as string)).toBe(local);
         },
       ),
+      { numRuns: 200 },
+    );
+  });
+});
+
+describe("formatUtcStable", () => {
+  it("formats a UTC timestamp the same way everywhere", () => {
+    expect(formatUtcStable("2026-12-02T18:58:53.641+00:00")).toBe(
+      "Dec 2, 2026, 6:58 PM UTC",
+    );
+    expect(formatUtcStable("2026-03-01T00:05:00Z")).toBe(
+      "Mar 1, 2026, 12:05 AM UTC",
+    );
+    expect(formatUtcStable("2026-03-01T12:00:00Z")).toBe(
+      "Mar 1, 2026, 12:00 PM UTC",
+    );
+  });
+
+  it("matches the Intl output apart from the separator", () => {
+    fc.assert(
+      fc.property(
+        fc.date({
+          min: new Date("2001-01-01"),
+          max: new Date("2099-12-31"),
+          noInvalidDate: true,
+        }),
+        (date) => {
+          const iso = date.toISOString();
+          const intl = formatDateTime(iso, {
+            timeZone: "UTC",
+            locale: "en-US",
+            showZone: true,
+          }).replace(" at ", ", ");
+          expect(formatUtcStable(iso)).toBe(intl);
+        },
+      ),
+      { numRuns: 200 },
+    );
+  });
+
+  it("falls back on invalid input and never throws", () => {
+    expect(formatUtcStable("nope")).toBe(INVALID_DATE);
+    fc.assert(
+      fc.property(fc.string(), (raw) => {
+        expect(formatUtcStable(raw).length).toBeGreaterThan(0);
+      }),
       { numRuns: 200 },
     );
   });

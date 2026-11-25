@@ -137,6 +137,18 @@ export async function setJoinCode(
   throw new Error("could not allocate a join code");
 }
 
+/** Set or clear (`null`) the draft date. */
+export async function setDraftAt(
+  tx: QueryRunner,
+  leagueId: string,
+  draftAt: string | null,
+): Promise<void> {
+  await tx.query(`update public.leagues set draft_at = $2 where id = $1`, [
+    leagueId,
+    draftAt,
+  ]);
+}
+
 export async function deleteLeague(
   tx: QueryRunner,
   leagueId: string,

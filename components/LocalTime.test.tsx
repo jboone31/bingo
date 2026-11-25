@@ -15,6 +15,8 @@ describe("LocalTime", () => {
   });
 
   it("server-renders UTC with a label", () => {
-    expect(renderToString(<LocalTime iso={ISO} />)).toContain("UTC");
+    expect(renderToString(<LocalTime iso={ISO} />)).toContain(
+      "Mar 1, 2026, 7:00 PM UTC",
+    );
   });
 });

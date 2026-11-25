@@ -137,6 +137,11 @@ Depends on F1.5. Rules referenced: `draft-rules.md` (Leagues And Membership),
 The scenarios F2 needs, built by F2.5 (see Appendix): `league_empty`,
 `league_with_players`, `league_full`, `member_view`.
 
+5. **Draft date** (added after F2 shipped): the admin can set, change, or clear the
+   draft date in Settings while `pre_draft`, via `PATCH /api/leagues/[leagueId]`
+   with `{ draftAt }` (`null` clears). Others get `not_admin` or `league_not_found`;
+   after the draft starts it is refused with `league_not_pre_draft`.
+
 ## Out Of Scope
 
 - Pool, draft date editing, group count, pick timer, and starting the draft.
