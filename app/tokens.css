@@ -25,7 +25,8 @@
   --color-info: #a99bff;
   --color-danger: #ff6b78;
   --color-success: #3ddc84;
-  --glow-accent: 0 0 0 1px rgb(61 139 255 / 50%), 0 0 18px rgb(61 139 255 / 45%);
+  --glow-accent:
+    0 0 0 1px rgb(61 139 255 / 50%), 0 0 18px rgb(61 139 255 / 45%);
   --shadow-1: 0 1px 2px rgb(0 0 0 / 50%);
   --shadow-2: 0 8px 28px rgb(0 0 0 / 55%);
 }
@@ -45,7 +46,8 @@
     --color-info: #4a3cc7;
     --color-danger: #b3202f;
     --color-success: #126b38;
-    --glow-accent: 0 0 0 1px rgb(11 87 208 / 45%), 0 0 14px rgb(61 139 255 / 45%);
+    --glow-accent:
+      0 0 0 1px rgb(11 87 208 / 45%), 0 0 14px rgb(61 139 255 / 45%);
     --shadow-1: 0 1px 2px rgb(11 18 38 / 18%);
     --shadow-2: 0 8px 24px rgb(11 18 38 / 18%);
   }
