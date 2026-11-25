@@ -5,6 +5,7 @@ import { type FormEvent, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { useToast } from "@/components/ui/Toast";
+import { newRequestId } from "@/lib/ids/requestId";
 import { localInputToIso } from "@/lib/format/dateTime";
 import { reasonMessage } from "@/lib/leagues/messages";
 import { LEAGUE_NAME_MAX } from "@/lib/leagues/name";
@@ -14,7 +15,7 @@ export function CreateLeagueForm() {
   const router = useRouter();
   const toast = useToast();
   // One id per form, so a double submit returns the same league.
-  const [requestId] = useState(() => crypto.randomUUID());
+  const [requestId] = useState(() => newRequestId());
   const [name, setName] = useState("");
   const [draftLocal, setDraftLocal] = useState("");
   const [errors, setErrors] = useState<{ name?: string; draftAt?: string }>({});

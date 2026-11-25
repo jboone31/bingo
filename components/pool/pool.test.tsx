@@ -257,3 +257,22 @@ describe("ImportCsvPanel", () => {
     ).toHaveAttribute("download", "pool-template.csv");
   });
 });
+
+describe("insecure contexts (phone over http://<lan-ip>)", () => {
+  it("the add and import forms render when crypto.randomUUID is missing", () => {
+    vi.stubGlobal("crypto", {
+      getRandomValues: (array: Uint8Array) =>
+        globalThis.crypto.getRandomValues(array),
+    });
+    wrap(
+      <>
+        <AddSubmissionForm leagueId="L1" />
+        <ImportCsvPanel leagueId="L1" />
+      </>,
+    );
+    expect(
+      screen.getByRole("button", { name: "Add square" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("CSV file")).toBeInTheDocument();
+  });
+});

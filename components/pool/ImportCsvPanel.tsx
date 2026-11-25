@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { type ChangeEvent, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { newRequestId } from "@/lib/ids/requestId";
 import { csvErrorMessage, reasonMessage } from "@/lib/leagues/messages";
 import { CSV_TEMPLATE } from "@/lib/pool/importCsv";
 import { MAX_CSV_BYTES } from "@/lib/pool/limits";
@@ -36,7 +37,7 @@ export function ImportCsvPanel({ leagueId }: { leagueId: string }) {
   const router = useRouter();
   const toast = useToast();
   const input = useRef<HTMLInputElement>(null);
-  const [requestId, setRequestId] = useState(() => crypto.randomUUID());
+  const [requestId, setRequestId] = useState(() => newRequestId());
   const [state, setState] = useState<State>({ kind: "idle" });
 
   const url = `/api/leagues/${leagueId}/submissions/import`;
@@ -49,7 +50,7 @@ export function ImportCsvPanel({ leagueId }: { leagueId: string }) {
 
   function reset() {
     setState({ kind: "idle" });
-    setRequestId(crypto.randomUUID());
+    setRequestId(newRequestId());
     if (input.current) input.current.value = "";
   }
 

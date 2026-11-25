@@ -5,6 +5,7 @@ import { type FormEvent, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { TextField } from "@/components/ui/TextField";
 import { useToast } from "@/components/ui/Toast";
+import { newRequestId } from "@/lib/ids/requestId";
 import { reasonMessage } from "@/lib/leagues/messages";
 import styles from "./Pool.module.css";
 
@@ -12,7 +13,7 @@ import styles from "./Pool.module.css";
 export function AddSubmissionForm({ leagueId }: { leagueId: string }) {
   const router = useRouter();
   const toast = useToast();
-  const [requestId, setRequestId] = useState(() => crypto.randomUUID());
+  const [requestId, setRequestId] = useState(() => newRequestId());
   const [text, setText] = useState("");
   const [submitter, setSubmitter] = useState("");
   const [category, setCategory] = useState("");
@@ -35,7 +36,7 @@ export function AddSubmissionForm({ leagueId }: { leagueId: string }) {
         setText("");
         setSubmitter("");
         setCategory("");
-        setRequestId(crypto.randomUUID());
+        setRequestId(newRequestId());
         router.refresh();
       } else if (data.reason === "invalid_text") {
         setErrors({ text: reasonMessage(data.reason) });

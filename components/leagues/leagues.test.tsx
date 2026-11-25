@@ -319,3 +319,22 @@ describe("DraftDateForm", () => {
     expect(screen.getByLabelText("Draft date")).toBeInvalid();
   });
 });
+
+describe("insecure contexts (phone over http://<lan-ip>)", () => {
+  it("the create form renders and posts when crypto.randomUUID is missing", async () => {
+    vi.stubGlobal("crypto", {
+      getRandomValues: (array: Uint8Array) =>
+        globalThis.crypto.getRandomValues(array),
+    });
+    const fetchMock = reply(201, { ok: true, league: { id: "L1" } });
+    vi.stubGlobal("fetch", fetchMock);
+    wrap(<CreateLeagueForm />);
+    await userEvent.type(screen.getByLabelText("League name"), "Phone league");
+    await userEvent.click(
+      screen.getByRole("button", { name: "Create league" }),
+    );
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).requestId).toMatch(
+      /^[0-9a-f-]{36}$/,
+    );
+  });
+});
