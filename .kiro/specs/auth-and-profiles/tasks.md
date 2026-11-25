@@ -31,7 +31,7 @@
         out. Update `app/page.smoke.test.tsx`. _R5.1_
 
 - [ ] 5. Manual setup
-  - [ ] 5.1 Enable Google in Supabase Auth and add redirect URLs for local, preview
+  - [x] 5.1 Enable Google in Supabase Auth and add redirect URLs for local, preview
         and production. _R1_
   - [x] 5.2 Sign in end to end locally; confirm the profile row, edit the name, sign
         out. _R1 to R5_
