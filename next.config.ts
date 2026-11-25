@@ -9,6 +9,11 @@ import type { NextConfig } from "next";
  */
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Dev only (ignored in production builds): let a phone or other device on the same
+  // network load the dev server by LAN address or `.local` name. Without this Next.js
+  // blocks its hot-reload socket from any host but localhost. Patterns match one dot
+  // segment per `*`, so these cover the common private ranges.
+  allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "172.*.*.*", "*.local"],
 };
 
 export default nextConfig;
