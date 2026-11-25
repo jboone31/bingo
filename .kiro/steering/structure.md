@@ -44,6 +44,11 @@ under `app/api/`. Tests are co-located with the file they cover.
 `app/api/leagues/[leagueId]/submissions/` (add, clear), `.../import` (CSV, with a dry
 run), `.../[submissionId]` (edit, delete). Page: `(app)/leagues/[leagueId]/pool`.
 
+### Queue routes
+
+`app/api/leagues/[leagueId]/queue/` (add, reorder) and `.../queue/[submissionId]`
+(remove). Page: `(app)/leagues/[leagueId]/queue`. The pool page takes `?cat=&q=&sort=&page=`.
+
 ### Dev routes
 
 `app/api/dev/` (`seed`, `reset`, `act-as`, `sign-in`) and the `(app)/dev` page. All
@@ -84,8 +89,11 @@ property-tested in isolation. Current modules:
   `ApiError`). Server-only.
 - `dev/`: dev-only tools: gate, seed identity, scenario registry, seeding, reset and
   act-as. Server parts are server-only.
-- `pool/`: pool rules and validation (pure: fields, CSV parse and import, paging),
-  SQL (`queries.ts`) and RLS reads (`read.ts`).
+- `pool/`: pool rules and validation (pure: fields, CSV parse and import, paging,
+  filter/sort/search parsing in `query.ts`), SQL (`queries.ts`) and RLS reads
+  (`read.ts`).
+- `queue/`: queue rules, ordering helpers and the order saver (pure), SQL
+  (`queries.ts`) and RLS reads (`read.ts`).
 - `leagues/`: league rules and validation (pure), SQL (`queries.ts`), RLS reads
   (`read.ts`), and route guards. Player-facing error text is in `messages.ts`.
 
@@ -99,7 +107,9 @@ Shared React components.
   Toast, EmptyState, ErrorState, Spinner, Skeleton). Each has a CSS Module and a
   test. Styled only from tokens.
 - `dev/`: dev hub and the "acting as" banner (dev tools only).
-- `pool/`: pool screens' components (list, add form, CSV import, row actions).
+- `pool/`: pool screens' components (list, filter bar, add form, CSV import, row
+  actions).
+- `queue/`: the queue list (drag and drop) and the add-to-queue button.
 - `leagues/`: league screens' components (cards, forms, member list, invite panel,
   confirm and delete dialogs).
 - `shell/`: the signed-in frame (AppHeader, UserMenu, PageContainer, SubNav).

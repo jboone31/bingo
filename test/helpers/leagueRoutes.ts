@@ -63,3 +63,15 @@ export function mockPoolQueries() {
     deleteAllSubmissions: vi.fn(),
   };
 }
+
+/** The queue query functions the routes call, all mocked. */
+export function mockQueueQueries() {
+  return {
+    lockMemberForQueue: vi.fn(),
+    submissionInLeague: vi.fn(),
+    getQueueIds: vi.fn(),
+    insertQueueItem: vi.fn(),
+    deleteQueueItem: vi.fn(),
+    rewriteOrder: vi.fn(),
+  };
+}

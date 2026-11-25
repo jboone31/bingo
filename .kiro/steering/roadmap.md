@@ -35,7 +35,7 @@ written and features ship.
 | F2  | Leagues                         | F1.5           | Done        |
 | F2.5 | Dev tooling and seed scenarios | F2             | Done        |
 | F3  | Pool administration             | F2             | Done        |
-| F4  | Pre-draft pool and queue        | F2, F3         | Not started |
+| F4  | Pre-draft pool and queue        | F2, F3         | Done        |
 | F5  | Realtime and event log          | F2             | Not started |
 | F6  | Draft setup and start           | F3, F4         | Not started |
 | F7  | Draft engine and timers         | F5, F6         | Not started |

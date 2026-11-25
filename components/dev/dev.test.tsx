@@ -50,7 +50,7 @@ describe("DevTools", () => {
     const fetchMock = reply(201, { ok: true, leagueId: "L1" });
     vi.stubGlobal("fetch", fetchMock);
     setup();
-    expect(screen.getAllByRole("button", { name: "Run" })).toHaveLength(6);
+    expect(screen.getAllByRole("button", { name: "Run" })).toHaveLength(7);
     await userEvent.click(screen.getAllByRole("button", { name: "Run" })[1]);
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/dev/seed",

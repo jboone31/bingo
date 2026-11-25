@@ -105,8 +105,9 @@ interface PoolQuery { category: CategoryFilter; q: string; sort: SortKey }
 ```
 
 - `parsePoolQuery(raw: Record<string, string | string[] | undefined>): PoolQuery`.
-  Reads `cat`, `q`, `sort`. `cat` undefined is all, `""` is none, otherwise named
-  (trimmed, lowercased, whitespace collapsed, cut to 40). `q` is trimmed and cut to 100.
+  Reads `cat`, `q`, `sort`. `cat` missing or empty is all, `none` is Uncategorized,
+  `c:<name>` is a named category (trimmed, lowercased, whitespace collapsed, cut to 40);
+  anything else is all. `q` is trimmed and cut to 100.
   `sort` outside the four values is `added`. Arrays use the first value. Never throws.
 - `poolQueryToParams(query, page?): URLSearchParams` omits defaults, so links stay
   short, and round-trips: `parsePoolQuery(toObject(poolQueryToParams(q))) equals q`.

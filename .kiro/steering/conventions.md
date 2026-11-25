@@ -45,6 +45,9 @@ say so in the spec and update this file.
   pick deadlines. Client clocks are used only to display countdowns.
 - Tables owned by a league reference it with `on delete cascade`, so deleting a
   league removes everything it owns.
+- Private per-player data (a queue) uses an owner select policy, and composite foreign
+  keys that tie each row to the player's league membership and to rows in the same
+  league, so leaving or deleting cascades and cross-league references are impossible.
 - Other tables point at a submission by its `id`. Never rely on submission text
   being unique: duplicates are allowed by design.
 - Prefer constraints and unique indexes over application checks for rules the data

@@ -11,6 +11,7 @@ import { Panel } from "@/components/ui/Panel";
 import { getSessionUser } from "@/lib/auth/session";
 import { getLeague, listMembers } from "@/lib/leagues/read";
 import { countPool } from "@/lib/pool/read";
+import { countQueue } from "@/lib/queue/read";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -32,7 +33,10 @@ export default async function LeagueOverviewPage({
     notFound();
   }
   const preDraft = league.status === "pre_draft";
-  const poolSize = await countPool(leagueId);
+  const [poolSize, queueSize] = await Promise.all([
+    countPool(leagueId),
+    countQueue(leagueId, user.id),
+  ]);
 
   return (
     <>
@@ -74,6 +78,16 @@ export default async function LeagueOverviewPage({
                 {me.role === "admin" && preDraft
                   ? "Manage the pool"
                   : "View the pool"}
+              </Link>
+            </p>
+          </Panel>
+          <Panel title="My queue">
+            <p className={styles.date}>
+              {queueSize} {queueSize === 1 ? "square" : "squares"}
+            </p>
+            <p>
+              <Link href={`/leagues/${leagueId}/queue`}>
+                {preDraft ? "Rank your queue" : "View your queue"}
               </Link>
             </p>
           </Panel>

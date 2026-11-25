@@ -1,15 +1,25 @@
 import { notFound } from "next/navigation";
+import { DraftDateLine } from "@/components/leagues/DraftDateLine";
 import { AddSubmissionForm } from "@/components/pool/AddSubmissionForm";
 import { ClearPoolButton } from "@/components/pool/ClearPoolButton";
 import { ImportCsvPanel } from "@/components/pool/ImportCsvPanel";
+import { PoolFilterBar } from "@/components/pool/PoolFilterBar";
 import { SubmissionList } from "@/components/pool/SubmissionList";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ButtonLink } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Pagination } from "@/components/ui/Pagination";
 import { Panel } from "@/components/ui/Panel";
 import { getSessionUser } from "@/lib/auth/session";
 import { getLeague, listMembers } from "@/lib/leagues/read";
-import { getPoolPage } from "@/lib/pool/read";
+import {
+  describeFilter,
+  isDefaultQuery,
+  parsePoolQuery,
+  poolQueryToParams,
+} from "@/lib/pool/query";
+import { getPoolPage, listCategories } from "@/lib/pool/read";
+import { getQueuedIds } from "@/lib/queue/read";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -19,10 +29,10 @@ export default async function PoolPage({
   searchParams,
 }: {
   params: Promise<{ leagueId: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { leagueId } = await params;
-  const { page: rawPage } = await searchParams;
+  const raw = await searchParams;
   const user = await getSessionUser();
   const league = await getLeague(leagueId);
   if (user === null || league === null) {
@@ -33,20 +43,39 @@ export default async function PoolPage({
   if (me === undefined) {
     notFound();
   }
-  const canEdit = me.role === "admin" && league.status === "pre_draft";
-  const pool = await getPoolPage(leagueId, rawPage);
+  const preDraft = league.status === "pre_draft";
+  const canEdit = me.role === "admin" && preDraft;
+  const query = parsePoolQuery(raw);
+  const basePath = `/leagues/${leagueId}/pool`;
+  const [pool, categories] = await Promise.all([
+    getPoolPage(leagueId, query, raw.page),
+    listCategories(leagueId),
+  ]);
+  const queuedIds = preDraft
+    ? await getQueuedIds(
+        leagueId,
+        user.id,
+        pool.items.map((item) => item.id),
+      )
+    : undefined;
+  const filtered = !isDefaultQuery(query);
 
   return (
     <>
       <PageHeader
         title="Pool"
-        subtitle={`${pool.total} ${pool.total === 1 ? "square" : "squares"} in ${league.name}`}
+        subtitle={
+          filtered
+            ? `${pool.total} of ${pool.poolTotal} squares in ${league.name}`
+            : `${pool.poolTotal} ${pool.poolTotal === 1 ? "square" : "squares"} in ${league.name}`
+        }
         actions={
           canEdit ? (
-            <ClearPoolButton leagueId={leagueId} count={pool.total} />
+            <ClearPoolButton leagueId={leagueId} count={pool.poolTotal} />
           ) : undefined
         }
       />
+      <DraftDateLine draftAt={league.draftAt} />
       <div className={styles.layout}>
         {canEdit ? (
           <div className={styles.tools}>
@@ -59,7 +88,7 @@ export default async function PoolPage({
           </div>
         ) : null}
         <div>
-          {pool.total === 0 ? (
+          {pool.poolTotal === 0 ? (
             <EmptyState
               title="The pool is empty"
               message={
@@ -70,16 +99,37 @@ export default async function PoolPage({
             />
           ) : (
             <>
-              <SubmissionList
-                leagueId={leagueId}
-                items={pool.items}
-                canEdit={canEdit}
+              <PoolFilterBar
+                basePath={basePath}
+                query={query}
+                categories={categories}
               />
-              <Pagination
-                basePath={`/leagues/${leagueId}/pool`}
-                page={pool.page}
-                pageCount={pool.pageCount}
-              />
+              {pool.total === 0 ? (
+                <EmptyState
+                  title="No squares match"
+                  message={`Nothing matches ${describeFilter(query).join(" and ")}.`}
+                  action={
+                    <ButtonLink href={basePath} variant="secondary">
+                      Clear the filter
+                    </ButtonLink>
+                  }
+                />
+              ) : (
+                <>
+                  <SubmissionList
+                    leagueId={leagueId}
+                    items={pool.items}
+                    canEdit={canEdit}
+                    queuedIds={queuedIds}
+                  />
+                  <Pagination
+                    basePath={basePath}
+                    page={pool.page}
+                    pageCount={pool.pageCount}
+                    params={poolQueryToParams(query)}
+                  />
+                </>
+              )}
             </>
           )}
         </div>

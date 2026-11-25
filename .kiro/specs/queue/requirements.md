@@ -43,8 +43,10 @@ As a member, I narrow the pool to find squares I want.
    Category).
 2. The bar is a plain form that submits through the URL (`?cat=&q=&sort=&page=`). It
    works without client JavaScript. A Clear link resets it.
-3. `cat` absent means all categories; `cat=` (present but empty) means Uncategorized;
-   `cat=sports` means that category, matched ignoring case.
+3. `cat` missing or empty means all categories; `cat=none` means Uncategorized;
+   `cat=c:sports` means that category, matched ignoring case. The `c:` prefix means a
+   category can never be mistaken for the special values, and a plain form can submit
+   "All".
 4. `q` is matched against square text, ignoring case, as a literal substring. Typing
    `%`, `_`, quotes or `*` matches those characters and cannot break the query. Over
    100 characters is cut to 100.

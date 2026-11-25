@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/Badge";
 import { displayCategory, displaySubmitter } from "@/lib/pool/fields";
 import type { SubmissionRow } from "@/lib/pool/read";
 import styles from "./SubmissionList.module.css";
+import { QueueToggle } from "@/components/queue/QueueToggle";
 import { SubmissionActions } from "./SubmissionActions";
 
 /**
@@ -12,10 +13,13 @@ export function SubmissionList({
   leagueId,
   items,
   canEdit,
+  queuedIds,
 }: {
   leagueId: string;
   items: readonly SubmissionRow[];
   canEdit: boolean;
+  /** When given, each row gets a queue button reflecting whether it is queued. */
+  queuedIds?: ReadonlySet<string>;
 }) {
   return (
     <ul className={styles.list}>
@@ -30,9 +34,18 @@ export function SubmissionList({
               </Badge>
             </p>
           </div>
-          {canEdit ? (
-            <SubmissionActions leagueId={leagueId} submission={item} />
-          ) : null}
+          <div className={styles.controls}>
+            {queuedIds ? (
+              <QueueToggle
+                leagueId={leagueId}
+                submissionId={item.id}
+                queued={queuedIds.has(item.id)}
+              />
+            ) : null}
+            {canEdit ? (
+              <SubmissionActions leagueId={leagueId} submission={item} />
+            ) : null}
+          </div>
         </li>
       ))}
     </ul>

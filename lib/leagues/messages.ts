@@ -25,6 +25,9 @@ const MESSAGES: Record<string, string> = {
     "That file is not valid CSV. Check for a missing closing quote.",
   csv_invalid: "Some rows have problems. Nothing was imported.",
   submission_not_found: "That square no longer exists.",
+  queue_full: "Your queue is full. The limit is 200 squares.",
+  queue_changed:
+    "Your queue was changed somewhere else. Showing the latest version.",
 };
 
 const FALLBACK = "Something went wrong. Please try again.";

@@ -13,6 +13,8 @@
 - **Quality tooling**: ESLint (flat config, Next + TypeScript rules), Prettier owns
   formatting.
 - **Testing**: Vitest as the runner, fast-check for property-based tests.
+- **Drag and drop**: `@dnd-kit` (core, sortable, utilities) for the re-orderable queue.
+  It supports touch, mouse and keyboard.
 
 ## Data Access
 

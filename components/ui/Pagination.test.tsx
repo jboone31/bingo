@@ -24,6 +24,25 @@ describe("Pagination", () => {
     );
   });
 
+  it("keeps other parameters in every link", () => {
+    render(
+      <Pagination
+        basePath="/x"
+        page={2}
+        pageCount={3}
+        params={new URLSearchParams("cat=none&sort=text&page=2")}
+      />,
+    );
+    expect(screen.getByRole("link", { name: "Previous" })).toHaveAttribute(
+      "href",
+      "/x?cat=none&sort=text",
+    );
+    expect(screen.getByRole("link", { name: "Next" })).toHaveAttribute(
+      "href",
+      "/x?cat=none&sort=text&page=3",
+    );
+  });
+
   it("disables Previous on the first page and Next on the last", () => {
     const { rerender } = render(
       <Pagination basePath="/x" page={1} pageCount={2} />,

@@ -43,15 +43,15 @@ describe("league layout navigation", () => {
       { userId: "u1", displayName: "A", role: "admin" },
     ]);
     await show();
-    expect(labels()).toEqual(["Overview", "Pool", "Settings"]);
+    expect(labels()).toEqual(["Overview", "Pool", "Queue", "Settings"]);
   });
 
-  it("shows Overview and Pool, but not Settings, to a member", async () => {
+  it("shows Overview, Pool and Queue, but not Settings, to a member", async () => {
     m.listMembers.mockResolvedValue([
       { userId: "u1", displayName: "A", role: "member" },
     ]);
     await show();
-    expect(labels()).toEqual(["Overview", "Pool"]);
+    expect(labels()).toEqual(["Overview", "Pool", "Queue"]);
   });
 
   it("is not found for a non-member league", async () => {

@@ -14,6 +14,10 @@ export interface ScenarioPlan {
   readonly draftAtOffsetDays: number | null;
   /** Generated pool submissions to add (F3). */
   readonly poolSubmissions: number;
+  /** Squares in your queue (F4). Needs a pool at least this big. */
+  readonly viewerQueueSize: number;
+  /** Squares in each seed player's queue (F4). */
+  readonly fakeQueueSize: number;
 }
 
 export interface Scenario {
@@ -33,6 +37,8 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       fakeAdmin: false,
       draftAtOffsetDays: null,
       poolSubmissions: 0,
+      viewerQueueSize: 0,
+      fakeQueueSize: 0,
     },
   },
   league_with_players: {
@@ -46,6 +52,8 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       fakeAdmin: false,
       draftAtOffsetDays: 7,
       poolSubmissions: 0,
+      viewerQueueSize: 0,
+      fakeQueueSize: 0,
     },
   },
   league_full: {
@@ -58,6 +66,8 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       fakeAdmin: false,
       draftAtOffsetDays: 7,
       poolSubmissions: 0,
+      viewerQueueSize: 0,
+      fakeQueueSize: 0,
     },
   },
   league_with_pool: {
@@ -71,6 +81,8 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       fakeAdmin: false,
       draftAtOffsetDays: 7,
       poolSubmissions: 60,
+      viewerQueueSize: 0,
+      fakeQueueSize: 0,
     },
   },
   pool_ready: {
@@ -84,6 +96,23 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       fakeAdmin: false,
       draftAtOffsetDays: 7,
       poolSubmissions: 300,
+      viewerQueueSize: 0,
+      fakeQueueSize: 0,
+    },
+  },
+  queue_started: {
+    label: "Queue started",
+    description:
+      "Pre-draft. As the League with a pool, plus 8 squares in your queue and 10 in each seed player's.",
+    plan: {
+      leagueName: "[Seed] Queue started",
+      viewerRole: "admin",
+      fakeMembers: 11,
+      fakeAdmin: false,
+      draftAtOffsetDays: 7,
+      poolSubmissions: 60,
+      viewerQueueSize: 8,
+      fakeQueueSize: 10,
     },
   },
   member_view: {
@@ -97,6 +126,8 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       fakeAdmin: true,
       draftAtOffsetDays: 7,
       poolSubmissions: 0,
+      viewerQueueSize: 0,
+      fakeQueueSize: 0,
     },
   },
 };
@@ -141,4 +172,33 @@ export function seedPoolRows(count: number): SeedSubmission[] {
     });
   }
   return rows;
+}
+
+/** Greatest common divisor, for choosing a stride that visits every index once. */
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
+/**
+ * Which pool positions (0-based) go in a seeded queue, in queue order. Steps through
+ * the pool with a stride that shares no factor with its size, so every pick is
+ * distinct and the order looks scrambled, but the same `salt` always gives the same
+ * result. `size` is capped at the pool size.
+ */
+export function seedQueueOrder(
+  poolSize: number,
+  size: number,
+  salt: number,
+): number[] {
+  if (poolSize <= 0 || size <= 0) return [];
+  const count = Math.min(size, poolSize);
+  let stride = (Math.abs(salt) * 7 + 3) % poolSize || 1;
+  while (gcd(stride, poolSize) !== 1) {
+    stride = (stride % poolSize) + 1;
+  }
+  const start = Math.abs(salt) % poolSize;
+  return Array.from(
+    { length: count },
+    (_, i) => (start + i * stride) % poolSize,
+  );
 }

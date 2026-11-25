@@ -49,6 +49,16 @@ describe.skipIf(!hasDb)("dev tools", () => {
       const pool = await getSql()`
         select count(*)::int as n from public.submissions where league_id = ${id}`;
       expect(pool[0].n).toBe(plan.poolSubmissions);
+      const queues = await getSql()`
+        select user_id, count(*)::int as n from public.queue_items
+         where league_id = ${id} group by user_id`;
+      const byUser = new Map(
+        queues.map((r) => [r.user_id as string, r.n as number]),
+      );
+      expect(byUser.get(viewer) ?? 0).toBe(plan.viewerQueueSize);
+      const others = [...byUser.entries()].filter(([user]) => user !== viewer);
+      expect(others.length).toBe(plan.fakeQueueSize > 0 ? plan.fakeMembers : 0);
+      for (const [, n] of others) expect(n).toBe(plan.fakeQueueSize);
       expect(rows.filter((r) => r.role === "admin")).toHaveLength(1);
       const mine = rows.find((r) => r.user_id === viewer)!;
       expect(mine.role).toBe(plan.viewerRole);

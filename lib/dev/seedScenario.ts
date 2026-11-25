@@ -3,7 +3,8 @@ import { randomUUID } from "node:crypto";
 import { withTransaction } from "@/lib/db/server";
 import { createLeague } from "@/lib/leagues/queries";
 import { insertSubmissions, recordImport } from "@/lib/pool/queries";
-import { planFor, seedPoolRows } from "./scenarios";
+import { planFor, seedPoolRows, seedQueueOrder } from "./scenarios";
+import { insertSeedQueue } from "./seedQueue";
 import { ensureSeedUsers } from "./seedUsers";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -47,7 +48,30 @@ export async function seedScenario(
     if (plan.poolSubmissions > 0) {
       const rows = seedPoolRows(plan.poolSubmissions);
       const record = await recordImport(tx, id, randomUUID(), rows.length);
-      await insertSubmissions(tx, id, record.importId, rows);
+      const submissionIds = await insertSubmissions(
+        tx,
+        id,
+        record.importId,
+        rows,
+      );
+      // Queues: you first, then each seed player, each in a different scrambled order.
+      const owners = [
+        { userId: viewerId, size: plan.viewerQueueSize },
+        ...fakes.map((userId) => ({ userId, size: plan.fakeQueueSize })),
+      ];
+      for (const [salt, owner] of owners.entries()) {
+        const picks = seedQueueOrder(
+          submissionIds.length,
+          owner.size,
+          salt + 1,
+        );
+        await insertSeedQueue(
+          tx,
+          id,
+          owner.userId,
+          picks.map((index) => submissionIds[index]),
+        );
+      }
     }
     return id;
   });
