@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ButtonLink } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
@@ -47,6 +47,10 @@ export function QueueList({
 }) {
   const router = useRouter();
   const toast = useToast();
+  // A stable id for the drag library. Without it the library numbers its accessibility
+  // ids from a counter in module memory, which the server keeps incrementing across
+  // requests while each browser page starts at zero, so hydration mismatches.
+  const dndId = useId();
   const [byId] = useState(() => new Map(items.map((item) => [item.id, item])));
   const [order, setOrder] = useState(() => items.map((item) => item.id));
   const listRef = useRef<HTMLOListElement>(null);
@@ -170,6 +174,7 @@ export function QueueList({
         </p>
       ) : null}
       <DndContext
+        id={dndId}
         sensors={sensors}
         collisionDetection={closestCenter}
         autoScroll={AUTO_SCROLL}
