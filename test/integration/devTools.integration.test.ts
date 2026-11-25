@@ -46,6 +46,9 @@ describe.skipIf(!hasDb)("dev tools", () => {
 
       const rows = await members(id);
       expect(rows).toHaveLength(totalMembers(plan));
+      const pool = await getSql()`
+        select count(*)::int as n from public.submissions where league_id = ${id}`;
+      expect(pool[0].n).toBe(plan.poolSubmissions);
       expect(rows.filter((r) => r.role === "admin")).toHaveLength(1);
       const mine = rows.find((r) => r.user_id === viewer)!;
       expect(mine.role).toBe(plan.viewerRole);

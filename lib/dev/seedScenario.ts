@@ -2,7 +2,8 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { withTransaction } from "@/lib/db/server";
 import { createLeague } from "@/lib/leagues/queries";
-import { planFor } from "./scenarios";
+import { insertSubmissions, recordImport } from "@/lib/pool/queries";
+import { planFor, seedPoolRows } from "./scenarios";
 import { ensureSeedUsers } from "./seedUsers";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -42,6 +43,11 @@ export async function seedScenario(
          select $1, u, 'member' from unnest($2::uuid[]) as u`,
         [id, others],
       );
+    }
+    if (plan.poolSubmissions > 0) {
+      const rows = seedPoolRows(plan.poolSubmissions);
+      const record = await recordImport(tx, id, randomUUID(), rows.length);
+      await insertSubmissions(tx, id, record.importId, rows);
     }
     return id;
   });

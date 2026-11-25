@@ -39,6 +39,11 @@ under `app/api/`. Tests are co-located with the file they cover.
   do not include `(app)`. `sign-in/` sits outside it and has its own layout.
 - `(app)/dev/components/`: component gallery, 404 unless `ENABLE_DEV_TOOLS=1`.
 
+### Pool routes
+
+`app/api/leagues/[leagueId]/submissions/` (add, clear), `.../import` (CSV, with a dry
+run), `.../[submissionId]` (edit, delete). Page: `(app)/leagues/[leagueId]/pool`.
+
 ### Dev routes
 
 `app/api/dev/` (`seed`, `reset`, `act-as`) and the `(app)/dev` page. All return 404
@@ -78,6 +83,8 @@ property-tested in isolation. Current modules:
   `ApiError`). Server-only.
 - `dev/`: dev-only tools: gate, seed identity, scenario registry, seeding, reset and
   act-as. Server parts are server-only.
+- `pool/`: pool rules and validation (pure: fields, CSV parse and import, paging),
+  SQL (`queries.ts`) and RLS reads (`read.ts`).
 - `leagues/`: league rules and validation (pure), SQL (`queries.ts`), RLS reads
   (`read.ts`), and route guards. Player-facing error text is in `messages.ts`.
 
@@ -91,6 +98,7 @@ Shared React components.
   Toast, EmptyState, ErrorState, Spinner, Skeleton). Each has a CSS Module and a
   test. Styled only from tokens.
 - `dev/`: dev hub and the "acting as" banner (dev tools only).
+- `pool/`: pool screens' components (list, add form, CSV import, row actions).
 - `leagues/`: league screens' components (cards, forms, member list, invite panel,
   confirm and delete dialogs).
 - `shell/`: the signed-in frame (AppHeader, UserMenu, PageContainer, SubNav).

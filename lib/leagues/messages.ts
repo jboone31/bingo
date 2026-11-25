@@ -15,6 +15,16 @@ const MESSAGES: Record<string, string> = {
   target_not_member: "That person is not in the league.",
   confirmation_mismatch: "The name you typed does not match.",
   unauthenticated: "Please sign in again.",
+  invalid_text: "Enter the square's text, 1 to 200 characters.",
+  invalid_submitter: "The submitter can be up to 60 characters.",
+  invalid_category: "The category can be up to 40 characters.",
+  pool_full: "The pool is limited to 5,000 squares.",
+  csv_too_large: "That file is too large. The limit is 1 MB.",
+  csv_empty: "That file has no rows to import.",
+  csv_malformed:
+    "That file is not valid CSV. Check for a missing closing quote.",
+  csv_invalid: "Some rows have problems. Nothing was imported.",
+  submission_not_found: "That square no longer exists.",
 };
 
 const FALLBACK = "Something went wrong. Please try again.";
@@ -24,4 +34,27 @@ export function reasonMessage(reason: unknown): string {
   return typeof reason === "string" && reason in MESSAGES
     ? MESSAGES[reason]
     : FALLBACK;
+}
+
+const CSV_REASONS: Record<string, string> = {
+  invalid_text: "text must be 1 to 200 characters",
+  invalid_submitter: "submitter must be 60 characters or fewer",
+  invalid_category: "category must be 40 characters or fewer",
+  unknown_column: "unknown column name",
+  duplicate_column: "this column appears more than once",
+  missing_text_column: "a text column is required",
+  extra_cells: "has more cells than the header",
+  unterminated_quote: "a quoted value is missing its closing quote",
+};
+
+/** Text for one CSV problem, for example `Row 4, text: text must be 1 to 200 ...`. */
+export function csvErrorMessage(error: {
+  row: number;
+  column: string;
+  reason: string;
+}): string {
+  const where = error.column
+    ? `Row ${error.row}, ${error.column}`
+    : `Row ${error.row}`;
+  return `${where}: ${CSV_REASONS[error.reason] ?? "problem with this row"}`;
 }

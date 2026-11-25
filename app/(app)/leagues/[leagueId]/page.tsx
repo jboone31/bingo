@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MemberList } from "@/components/leagues/MemberList";
 import { ConfirmAction } from "@/components/leagues/ConfirmAction";
@@ -9,6 +10,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
 import { getSessionUser } from "@/lib/auth/session";
 import { getLeague, listMembers } from "@/lib/leagues/read";
+import { countPool } from "@/lib/pool/read";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +32,7 @@ export default async function LeagueOverviewPage({
     notFound();
   }
   const preDraft = league.status === "pre_draft";
+  const poolSize = await countPool(leagueId);
 
   return (
     <>
@@ -60,6 +63,18 @@ export default async function LeagueOverviewPage({
               ) : (
                 "Date to be set"
               )}
+            </p>
+          </Panel>
+          <Panel title="Pool">
+            <p className={styles.date}>
+              {poolSize} {poolSize === 1 ? "square" : "squares"}
+            </p>
+            <p>
+              <Link href={`/leagues/${leagueId}/pool`}>
+                {me.role === "admin" && preDraft
+                  ? "Manage the pool"
+                  : "View the pool"}
+              </Link>
             </p>
           </Panel>
           {preDraft ? (

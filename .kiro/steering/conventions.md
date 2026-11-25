@@ -45,6 +45,8 @@ say so in the spec and update this file.
   pick deadlines. Client clocks are used only to display countdowns.
 - Tables owned by a league reference it with `on delete cascade`, so deleting a
   league removes everything it owns.
+- Other tables point at a submission by its `id`. Never rely on submission text
+  being unique: duplicates are allowed by design.
 - Prefer constraints and unique indexes over application checks for rules the data
   must always satisfy.
 - Migrations are numbered `NNNN_name.sql`, each in its own `begin; ... commit;`.

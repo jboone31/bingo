@@ -47,3 +47,19 @@ export const league = (over: Record<string, unknown> = {}) => ({
   joinCode: "K7P2QX9M",
   ...over,
 });
+
+export const SUBMISSION_ID = "55555555-5555-4555-8555-555555555555";
+export const REQUEST_ID = "44444444-4444-4444-8444-444444444444";
+
+/** The pool query functions the routes call, all mocked. */
+export function mockPoolQueries() {
+  return {
+    recordImport: vi.fn(),
+    insertSubmissions: vi.fn(),
+    countSubmissions: vi.fn(),
+    firstSubmissionOfImport: vi.fn(),
+    updateSubmission: vi.fn(),
+    deleteSubmission: vi.fn(),
+    deleteAllSubmissions: vi.fn(),
+  };
+}

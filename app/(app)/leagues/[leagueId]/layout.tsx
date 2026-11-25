@@ -29,6 +29,7 @@ export default async function LeagueLayout({
   );
   const items = [
     { href: `/leagues/${leagueId}`, label: "Overview" },
+    { href: `/leagues/${leagueId}/pool`, label: "Pool" },
     ...(isAdmin
       ? [{ href: `/leagues/${leagueId}/settings`, label: "Settings" }]
       : []),
