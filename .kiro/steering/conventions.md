@@ -78,8 +78,16 @@ say so in the spec and update this file.
   `test/integration/`.
 - Add tests when the spec's tasks call for them.
 
+## Dev Scenarios
+
+- Each feature lists the states it needs to be tested in (for example "pool full,
+  ready to start") and adds them as seed scenarios in `scripts/seed/`.
+- Dev-only routes, seeds and the "act as" switcher run only when an explicit env flag
+  is set and never in production. Seeded rows are tagged so reset removes only them.
+- UI behavior is checked against a seeded scenario, not by building a league by hand.
+
 ## Done Means
 
 A feature is done when `npm run typecheck`, `npm run lint`, `npm run format:check`,
 `npm test` and `npm run build` pass, integration tests for any new tables or policies
-pass, and `structure.md` and `roadmap.md` reflect the change.
+pass, the feature's dev scenarios exist, and `structure.md` and `roadmap.md` reflect the change.

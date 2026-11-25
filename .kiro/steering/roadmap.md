@@ -21,15 +21,19 @@ written and features ship.
    `product.md` if it changes a rule.
 3. Follow `conventions.md` for access, database, routes and testing. For timers,
    realtime or the event log, also read `reference-bbb.md`.
-4. Create the spec at `.kiro/specs/<feature-name>/`.
-5. When the feature ships, set its status here and update `structure.md` if the
+4. List the dev scenarios the feature needs (see `conventions.md`, Dev Scenarios)
+   and include building them in the tasks.
+5. Create the spec at `.kiro/specs/<feature-name>/`.
+6. When the feature ships, set its status here and update `structure.md` if the
    layout changed.
 
 | #   | Feature                         | Depends on     | Status      |
 | --- | ------------------------------- | -------------- | ----------- |
 | F0  | Foundation (scaffold, steering) | none           | Done        |
 | F1  | Auth and profiles               | F0             | Done        |
-| F2  | Leagues                         | F1             | Not started |
+| F1.5 | Design system and app shell    | F1             | Not started |
+| F2  | Leagues                         | F1.5           | Not started |
+| F2.5 | Dev tooling and seed scenarios | F2             | Not started |
 | F3  | Pool administration             | F2             | Not started |
 | F4  | Pre-draft pool and queue        | F2, F3         | Not started |
 | F5  | Realtime and event log          | F2             | Not started |
@@ -55,6 +59,19 @@ health route, test tooling, and these steering files.
 Decided: the profile stores the Google full name at first sign-in (else
 `Player xxxx`). See `.kiro/specs/auth-and-profiles/`.
 
+## F1.5: Design system and app shell
+
+- Design tokens (color, type, spacing) and a CSS approach, chosen once.
+- Shared components in `components/`: buttons, inputs, cards, dialogs, toasts,
+  empty, loading and error states.
+- App shell with navigation, signed-in header, and a URL scheme for league pages.
+- Mobile-first layout rules, plus the rules for the big-screen view.
+- Rough wireframes (markdown or ASCII) for home, league, pre-draft, draft room, big
+  screen and board. Per-feature layout detail stays in each feature's spec.
+- Restyle the F1 screens (sign-in, profile, home) with the new components.
+
+Open: CSS approach, visual style, light/dark.
+
 ## F2: Leagues
 
 - Home screen listing the player's active leagues, with actions to join or create.
@@ -64,6 +81,22 @@ Decided: the profile stores the Google full name at first sign-in (else
 - Block joining once the draft has started.
 
 Open: admin transfer, league deletion, whether the admin plays.
+
+## F2.5: Dev tooling and seed scenarios
+
+- `npm run db:seed -- --scenario=<name>` builds a league in a chosen state: empty
+  pool, ready to start, mid-draft, finished with boards. Scenarios are added by the
+  feature that introduces the state.
+- Fake users and a dev-only "act as" switcher, so one person can test several roles
+  without Google accounts.
+- Reset one scenario league without touching real data.
+- Safety: dev routes and seeds run only with an explicit env flag, never in
+  production, and touch only rows tagged as seed data.
+- Shared integration-test helpers (create user, league, members), replacing the
+  inline helper in `test/integration/profiles.integration.test.ts`.
+
+Open: one Supabase project or a separate dev project (also an open question in
+`tech.md`).
 
 ## F3: Pool administration
 
@@ -111,6 +144,9 @@ Open: how groups map onto channels and access rules.
 - Triggers: client nudges, every pick or queue write, and a seconds-level `pg_cron`
   backstop.
 - Draft completion per group, and detection that all groups are done.
+- Dev controls (dev flag only): shorten the pick timer, expire the current deadline
+  on demand, and let bots pick for chosen players, so the draft room can be tested
+  without waiting.
 
 ## F8: Draft room UI
 
