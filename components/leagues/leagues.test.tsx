@@ -181,7 +181,7 @@ describe("DeleteLeagueDialog", () => {
     );
     const confirm = screen.getByRole("button", { name: "Delete forever" });
     expect(confirm).toBeDisabled();
-    await userEvent.type(screen.getByLabelText("League name"), "Office 20");
+    await userEvent.type(screen.getByLabelText("League name"), "OFFICE 20");
     expect(confirm).toBeDisabled();
     await userEvent.type(screen.getByLabelText("League name"), "26");
     expect(confirm).toBeEnabled();
