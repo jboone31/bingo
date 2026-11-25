@@ -27,6 +27,10 @@ for behavior. Specs refine them but should not contradict them. Items marked
 - The admin can bulk-load by CSV (columns: submission text, submitter, category) or
   add one at a time. A league can be created with an empty pool.
 - Submitter names are always visible to players.
+- Duplicates are allowed. Every submission has a unique row id, so identical text is
+  still a distinct square. Cleaning up is the admin's job (edit or delete rows).
+- A CSV upload adds to the pool; it never replaces it. An upload with any invalid
+  row imports nothing.
 
 ## Pre-Draft
 

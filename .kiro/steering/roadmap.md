@@ -129,7 +129,9 @@ removed cleanly.
 Decided: submitter names are always visible to players, so no column hiding is
 needed in the pool read path.
 
-Open: duplicate handling on upload, whether a re-upload replaces or appends.
+Decided: duplicates are allowed and every submission has a unique row id. A re-upload
+appends. Uploads are all or nothing and safe to repeat. The admin can edit and delete
+single rows, or clear the pool. See `.kiro/specs/pool/`.
 
 ## F4: Pre-draft pool and queue
 
