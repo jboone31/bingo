@@ -322,9 +322,9 @@ describe("DraftDateForm", () => {
 
 describe("insecure contexts (phone over http://<lan-ip>)", () => {
   it("the create form renders and posts when crypto.randomUUID is missing", async () => {
+    const real = globalThis.crypto;
     vi.stubGlobal("crypto", {
-      getRandomValues: (array: Uint8Array) =>
-        globalThis.crypto.getRandomValues(array),
+      getRandomValues: (array: Uint8Array) => real.getRandomValues(array),
     });
     const fetchMock = reply(201, { ok: true, league: { id: "L1" } });
     vi.stubGlobal("fetch", fetchMock);

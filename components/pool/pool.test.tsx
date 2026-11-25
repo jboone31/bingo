@@ -260,9 +260,9 @@ describe("ImportCsvPanel", () => {
 
 describe("insecure contexts (phone over http://<lan-ip>)", () => {
   it("the add and import forms render when crypto.randomUUID is missing", () => {
+    const real = globalThis.crypto;
     vi.stubGlobal("crypto", {
-      getRandomValues: (array: Uint8Array) =>
-        globalThis.crypto.getRandomValues(array),
+      getRandomValues: (array: Uint8Array) => real.getRandomValues(array),
     });
     wrap(
       <>
