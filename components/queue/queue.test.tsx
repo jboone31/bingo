@@ -299,3 +299,17 @@ describe("QueueList", () => {
     expect(await screen.findByText("Your queue is empty")).toBeInTheDocument();
   });
 });
+
+describe("QueueList drag hint", () => {
+  it("tells touch users to press and hold, and is hidden when read only", () => {
+    const { unmount } = wrap(
+      <QueueList leagueId="L1" items={items} editable poolHref="/p" />,
+    );
+    expect(screen.getByText(/Press and hold the handle/)).toBeInTheDocument();
+    unmount();
+    wrap(
+      <QueueList leagueId="L1" items={items} editable={false} poolHref="/p" />,
+    );
+    expect(screen.queryByText(/Press and hold the handle/)).toBeNull();
+  });
+});

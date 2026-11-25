@@ -3,6 +3,12 @@
   color: var(--color-muted);
 }
 
+.hint {
+  margin: 0 0 var(--space-3);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
 .list {
   display: flex;
   flex-direction: column;
@@ -68,8 +74,16 @@
   gap: var(--space-1);
 }
 
-/* Only the handle blocks touch scrolling, so the rest of the row scrolls normally. */
+/*
+ * No touch-action: none here. Touch drags start on a press-and-hold (see sensors.ts),
+ * so a quick swipe on the handle must still scroll the page. Once a row is picked up,
+ * the drag library stops the page from scrolling under the finger. The callout and
+ * selection rules stop a long press from opening the browser's own menu.
+ */
 .handle {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -81,7 +95,6 @@
   color: var(--color-text);
   font-size: var(--text-lg);
   cursor: grab;
-  touch-action: none;
 }
 
 .handle:active {

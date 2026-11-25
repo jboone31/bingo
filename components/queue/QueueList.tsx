@@ -3,7 +3,8 @@
 import {
   DndContext,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   closestCenter,
   type DragEndEvent,
   useSensor,
@@ -25,6 +26,7 @@ import { moveById, moveItem } from "@/lib/queue/order";
 import { QUEUE_MAX } from "@/lib/queue/rules";
 import { OrderSaver, type SaveResult } from "@/lib/queue/saver";
 import { QueueRow } from "./QueueRow";
+import { AUTO_SCROLL, MOUSE_ACTIVATION, TOUCH_ACTIVATION } from "./sensors";
 import styles from "./QueueList.module.css";
 
 /**
@@ -79,7 +81,8 @@ export function QueueList({
   );
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(MouseSensor, { activationConstraint: MOUSE_ACTIVATION }),
+    useSensor(TouchSensor, { activationConstraint: TOUCH_ACTIVATION }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
@@ -161,9 +164,15 @@ export function QueueList({
       <p className={styles.count}>
         {rows.length} of {QUEUE_MAX} squares
       </p>
+      {editable ? (
+        <p className={styles.hint}>
+          Press and hold the handle (⠿), then drag. Or use the arrows.
+        </p>
+      ) : null}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        autoScroll={AUTO_SCROLL}
         onDragEnd={onDragEnd}
       >
         <SortableContext items={order} strategy={verticalListSortingStrategy}>

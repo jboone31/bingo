@@ -74,7 +74,9 @@ As a member, I narrow the pool to find squares I want.
 1. `/leagues/[leagueId]/queue` shows the member's queue in order: position number,
    square text, submitter, category.
 2. The queue can be re-ordered by dragging the handle on a row, and by Move up and Move
-   down buttons. Drag handles do not interfere with scrolling on a touch screen.
+   down buttons. On a touch screen a drag starts after pressing and holding the handle,
+   so swiping scrolls the page; the row follows one finger, and the page scrolls by
+   itself near the top and bottom edges.
 3. Each change updates the screen immediately and saves in the background. If saving
    fails, the list returns to the last saved order and a message is shown.
 4. Quick successive changes are saved in order and never lose the latest one.

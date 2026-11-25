@@ -218,7 +218,7 @@ Pool list rows pass `canQueue` (member, `pre_draft`) and the set of queued ids.
 | `SubmissionList` | `components/pool/` | Extended: optional `canQueue` and `queuedIds`; renders `QueueToggle` per row. |
 | `QueueToggle` | `components/queue/` | Client. Optimistic: flips at once, calls `POST` or `DELETE`, rolls back with a toast on failure, then `router.refresh()`. |
 | `QueueList` | `components/queue/` | Client. `@dnd-kit` `DndContext`, `SortableContext`, one `QueueRow` per item. Props: `leagueId`, `items`, `editable`. |
-| `QueueRow` | `components/queue/` | Position number, text, submitter, category badge, drag handle, Move up, Move down, Remove. The handle alone starts a drag (`touch-action: none` on it only), so the rest of the row scrolls normally on touch. |
+| `QueueRow` | `components/queue/` | Position number, text, submitter, category badge, drag handle, Move up, Move down, Remove. The handle alone starts a drag. Touch uses a press-and-hold (`TouchSensor`, 200 ms, 8 px tolerance), so a quick swipe on the handle still scrolls the page, and the held row follows one finger only. The page scrolls by itself near the top and bottom edges. `PointerSensor` is not used: it reacts to every finger, so a second finger would drag the row. There is no `touch-action: none` on the handle (a test guards this). |
 | `ui/Pagination` | existing | Gains an optional `params` prop so links keep the filter. |
 | `DraftDateLine` | `components/leagues/` | Shared by pool and queue pages. |
 
