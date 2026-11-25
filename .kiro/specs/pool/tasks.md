@@ -32,7 +32,7 @@
         `pool_ready`; extend `seedScenario` and the scenario tests. _R6_
 
 - [ ] 6. Manual check
-  - [ ] 6.1 Run `league_with_pool`: page through the pool, edit and delete a row, add a
+  - [x] 6.1 Run `league_with_pool`: page through the pool, edit and delete a row, add a
         duplicate, upload a good CSV, upload a CSV with bad rows and read the errors,
         double-click Import, clear the pool.
   - [ ] 6.2 Check at 360px and desktop width, and as a regular member (read only).

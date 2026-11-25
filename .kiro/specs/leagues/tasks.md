@@ -43,7 +43,7 @@
   - [x] 5.7 Page smoke tests for home and the invite link page.
 
 - [ ] 6. Manual check
-  - [ ] 6.1 With two Google accounts: create a league, join by code and by link,
+  - [x] 6.1 With two Google accounts: create a league, join by code and by link,
         confirm the member list shows both names, leave and rejoin, remove, transfer
         admin, regenerate the code (old code fails), delete the league.
   - [ ] 6.2 Check the pages at 360px and desktop width.

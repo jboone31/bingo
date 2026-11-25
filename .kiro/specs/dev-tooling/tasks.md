@@ -31,7 +31,7 @@
   - [x] 5.2 `DevBanner`, `AppHeader` prop, and the layout wiring, with tests. _R5.3_
 
 - [ ] 6. Manual check
-  - [ ] 6.1 With `ENABLE_DEV_TOOLS=1`: run each scenario, open the league, check the
+  - [x] 6.1 With `ENABLE_DEV_TOOLS=1`: run each scenario, open the league, check the
         member counts and roles; act as a fake player and check the banner and their
         view; reset mine, then reset all.
   - [ ] 6.2 Confirm `/dev` returns 404 with the flag unset.
