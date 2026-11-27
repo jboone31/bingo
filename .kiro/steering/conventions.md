@@ -69,6 +69,14 @@ say so in the spec and update this file.
 - Return a stable JSON shape with a machine-readable reason on failure. Never return
   raw database errors or connection details.
 - Routes are thin. Rules live in `lib/` as pure functions the route calls.
+  **Exception: the draft engine** (turn order, clock, auto-pick, settle, completion)
+  is SQL functions in migration 0011, so routes and the `pg_cron` backstop share one
+  implementation. `lib/draft/engine.ts` is a pure model of the same rules for
+  property tests, and integration tests check the SQL against it. Change both
+  together.
+- Every write during a draft settles the league first (`settleLeague`, or
+  `settleIfDrafting` before a weaker lock). Never take `for share` on the league and
+  then settle in the same transaction: upgrading the lock can deadlock.
 - Anything a client might trigger twice (a pick, a nudge, a double-click) must be
   safe to repeat. Creates that a double-click could duplicate carry a client request id
   (`newRequestId()`) stored under a unique constraint.

@@ -10,6 +10,9 @@ const m = vi.hoisted(() => ({
   resetMine: vi.fn(),
   resetAll: vi.fn(),
   resetOne: vi.fn(),
+  lockMySeedLeague: vi.fn(),
+  devExpire: vi.fn(),
+  setDevBots: vi.fn(),
   actAs: vi.fn(),
 }));
 vi.mock("@/lib/auth/session", () => ({ getSessionUser: m.getSessionUser }));
@@ -20,10 +23,16 @@ vi.mock("@/lib/dev/reset", () => ({
   resetMine: m.resetMine,
   resetAll: m.resetAll,
   resetOne: m.resetOne,
+  lockMySeedLeague: m.lockMySeedLeague,
+}));
+vi.mock("@/lib/draft/engine.server", () => ({
+  devExpire: m.devExpire,
+  setDevBots: m.setDevBots,
 }));
 vi.mock("@/lib/dev/actAs", () => ({ actAs: m.actAs }));
 
 import { POST as actAsPost } from "./act-as/route";
+import { POST as draftPost } from "./draft/route";
 import { POST as resetPost } from "./reset/route";
 import { POST as seedPost } from "./seed/route";
 
@@ -40,6 +49,11 @@ const routes = [
   ["seed", seedPost, { scenario: "league_empty" }],
   ["reset", resetPost, { scope: "mine" }],
   ["act-as", actAsPost, { userId: TARGET }],
+  [
+    "draft",
+    draftPost,
+    { leagueId: "11111111-1111-4111-8111-111111111111", action: "expire" },
+  ],
 ] as const;
 
 beforeEach(() => {
@@ -63,6 +77,7 @@ describe.each(routes)("POST /api/dev/%s", (_name, post, body) => {
     expect(m.seedScenario).not.toHaveBeenCalled();
     expect(m.resetAll).not.toHaveBeenCalled();
     expect(m.actAs).not.toHaveBeenCalled();
+    expect(m.devExpire).not.toHaveBeenCalled();
   });
 
   it("is 401 when signed out", async () => {
@@ -80,6 +95,7 @@ describe.each(routes)("POST /api/dev/%s", (_name, post, body) => {
     m.resetAll.mockRejectedValue(new Error("service key leaked"));
     m.resetOne.mockRejectedValue(new Error("service key leaked"));
     m.actAs.mockRejectedValue(new Error("service key leaked"));
+    m.lockMySeedLeague.mockRejectedValue(new Error("service key leaked"));
     const res = await post(req(body), ctx);
     expect(res.status).toBe(500);
     expect(JSON.stringify(await res.json())).not.toContain("leaked");
@@ -179,5 +195,41 @@ describe("act-as", () => {
     const res = await actAsPost(req({ userId: TARGET }), ctx);
     expect(await res.json()).toEqual({ ok: true });
     expect(m.actAs).toHaveBeenCalledWith(TARGET);
+  });
+});
+
+describe("draft", () => {
+  const LEAGUE = "11111111-1111-4111-8111-111111111111";
+  it.each([
+    ["an unknown action", { leagueId: LEAGUE, action: "pick" }],
+    ["a bad league id", { leagueId: "nope", action: "expire" }],
+  ])("is 400 for %s", async (_label, body) => {
+    expect((await draftPost(req(body), ctx)).status).toBe(400);
+  });
+
+  it("is 404 for a league that is not one of your seed leagues", async () => {
+    m.lockMySeedLeague.mockResolvedValue(false);
+    const res = await draftPost(
+      req({ leagueId: LEAGUE, action: "expire" }),
+      ctx,
+    );
+    expect(res.status).toBe(404);
+    expect(m.devExpire).not.toHaveBeenCalled();
+  });
+
+  it("expires turns and turns bots on and off", async () => {
+    m.lockMySeedLeague.mockResolvedValue(true);
+    m.devExpire.mockResolvedValue(3);
+    m.setDevBots.mockResolvedValue(0);
+    expect(
+      await (
+        await draftPost(req({ leagueId: LEAGUE, action: "expire" }), ctx)
+      ).json(),
+    ).toEqual({ ok: true, picks: 3 });
+    expect(m.lockMySeedLeague).toHaveBeenCalledWith({}, USER, LEAGUE);
+    await draftPost(req({ leagueId: LEAGUE, action: "bots_on" }), ctx);
+    expect(m.setDevBots).toHaveBeenLastCalledWith({}, LEAGUE, true);
+    await draftPost(req({ leagueId: LEAGUE, action: "bots_off" }), ctx);
+    expect(m.setDevBots).toHaveBeenLastCalledWith({}, LEAGUE, false);
   });
 });

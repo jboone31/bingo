@@ -9,6 +9,9 @@ for behavior. Specs refine them but should not contradict them. Items marked
 - Only the admin can delete a league, in any status, by typing its name. After the
   start the confirmation warns that everyone's picks (and boards) go too. This lets a
   group run a practice draft in a throwaway league before the real one.
+- Once the draft starts, memberships are fixed: nobody leaves or is removed, and the
+  database refuses to delete a member (so a deleted account cannot leave a hole).
+  Deleting the whole league still works.
 - Anyone signed in can create a league and becomes its admin. The admin also
   plays: they are a member and count in `N`.
 - Others join through an invite link or join code and are regular players.
@@ -39,9 +42,10 @@ for behavior. Specs refine them but should not contradict them. Items marked
 - Every member can view the full pool, and filter and sort it by category.
 - Every member keeps a personal queue: an ordered list of squares they want. They add
   from the pool and drag to re-rank.
-- A queue is private to its owner, holds up to 200 squares, and is edited while
-  `pre_draft` (and during the draft, from F7). Removing a square from the pool removes
-  it from every queue.
+- A queue is private to its owner, holds up to 200 squares, and is editable while
+  `pre_draft` and `drafting`. It is read only once the league is `in_progress`.
+  Removing a square from the pool removes it from every queue. A square already
+  drafted in your group cannot be added.
 - The admin sets a draft date. It is shown to all members. It does not gate the
   start: the admin starts whenever they choose.
 - The admin sets the number of draft groups (1 to 10, default 1) and can change it
@@ -74,6 +78,11 @@ for behavior. Specs refine them but should not contradict them. Items marked
 - There are **25 rounds**, one pick per player per round.
 - Each pick has a time limit set by the admin per league before the start: a whole
   number of seconds from 10 to 900 (15 minutes, for slow drafts), default 60.
+- **The clock**: turn 1 starts when the draft starts. After a manual pick the next
+  turn gets the full timer from the moment of the pick. After an auto-pick for a
+  missed deadline, the next deadline is the missed one plus the timer, so turns
+  missed while nobody was connected all settle at once. Only the player on the clock
+  picks; the admin cannot pick for anyone.
 - **Auto-pick**: if the clock runs out, the top square in the player's queue that is
   still available is drafted immediately. If the queue has nothing available, a random
   available square is drafted.

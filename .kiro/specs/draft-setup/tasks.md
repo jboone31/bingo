@@ -33,7 +33,7 @@
   - [ ] 6.3 Manual (user): on `ready_three_groups`, change groups and timer, watch the
         gate, save, start, and check the groups on the overview. _R1 to R4_
   - [ ] 6.4 Manual (user): on `pool_short`, Start is disabled with the reason. _R2.5_
-  - [ ] 6.5 Manual (user): after the start, a seed player (act as) cannot leave or
-        edit their queue, a new player cannot join with the code, and the admin cannot
+  - [ ] 6.5 Manual (user): after the start, a seed player (act as) cannot leave
+        (queue edits are allowed again since F7), a new player cannot join with the code, and the admin cannot
         edit the pool, settings or draft date. _R3.7_
   - [ ] 6.6 Manual (user): settings and overview at 360px and desktop width.

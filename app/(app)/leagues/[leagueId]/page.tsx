@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DraftGroups } from "@/components/draft/DraftGroups";
+import { DraftStatus } from "@/components/draft/DraftStatus";
+import { DevDraftPanel } from "@/components/dev/DevDraftPanel";
 import { GateSummary } from "@/components/draft/GateSummary";
 import { ActivityFeed } from "@/components/leagues/ActivityFeed";
 import { MemberList } from "@/components/leagues/MemberList";
@@ -12,7 +14,8 @@ import { Badge } from "@/components/ui/Badge";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
 import { getSessionUser } from "@/lib/auth/session";
-import { getDraftGroups } from "@/lib/draft/read";
+import { getDraftGroups, getDraftStatus } from "@/lib/draft/read";
+import { isDevToolsEnabled } from "@/lib/env";
 import { getRecentEvents } from "@/lib/events/read";
 import { RECENT_EVENTS } from "@/lib/events/types";
 import { getLeague, listMembers } from "@/lib/leagues/read";
@@ -39,12 +42,20 @@ export default async function LeagueOverviewPage({
     notFound();
   }
   const preDraft = league.status === "pre_draft";
-  const [poolSize, queueSize, recentEvents, groups] = await Promise.all([
-    countPool(leagueId),
-    countQueue(leagueId, user.id),
-    getRecentEvents(leagueId, RECENT_EVENTS),
-    preDraft ? Promise.resolve([]) : getDraftGroups(leagueId),
-  ]);
+  const drafting = league.status === "drafting";
+  const [poolSize, queueSize, recentEvents, groups, draftStatus] =
+    await Promise.all([
+      countPool(leagueId),
+      countQueue(leagueId, user.id),
+      getRecentEvents(leagueId, RECENT_EVENTS),
+      preDraft ? Promise.resolve([]) : getDraftGroups(leagueId),
+      drafting ? getDraftStatus(leagueId) : Promise.resolve([]),
+    ]);
+  const showDevDraft =
+    drafting &&
+    me.role === "admin" &&
+    league.seedScenario !== null &&
+    isDevToolsEnabled();
 
   return (
     <>
@@ -57,6 +68,25 @@ export default async function LeagueOverviewPage({
           </Badge>
         }
       />
+      {preDraft ? null : (
+        <div className={styles.wide}>
+          <Panel title="Draft status">
+            <DraftStatus
+              leagueId={leagueId}
+              groups={draftStatus}
+              viewerId={user.id}
+              completed={league.status === "in_progress"}
+            />
+          </Panel>
+        </div>
+      )}
+      {showDevDraft ? (
+        <div className={styles.wide}>
+          <Panel title="Dev draft controls">
+            <DevDraftPanel leagueId={leagueId} bots={league.devBots} />
+          </Panel>
+        </div>
+      ) : null}
       {preDraft ? null : (
         <div className={styles.wide}>
           <Panel title="Draft groups">

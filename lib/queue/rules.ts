@@ -4,9 +4,9 @@ import type { LeagueStatus } from "@/lib/leagues/types";
 /** Most squares one member can queue. Also enforced by a database trigger. */
 export const QUEUE_MAX = 200;
 
-/** Queue changes: any member, only while pre_draft (F7 extends this). */
+/** Queue changes: any member, while pre_draft or drafting. Read only once in progress. */
 export function canEditQueue(input: { status: LeagueStatus }): RuleResult {
-  if (input.status !== "pre_draft") {
+  if (input.status !== "pre_draft" && input.status !== "drafting") {
     return { ok: false, reason: "league_not_pre_draft", status: 409 };
   }
   return { ok: true };

@@ -51,6 +51,10 @@ deadlines are data.
   every pick or queue write before it proceeds, and a seconds-level `pg_cron` job as
   a backstop when nobody is connected.
 - The auto-pick and its event always commit together.
+- Built in F7 as SQL functions (migration 0011): `settle_league`, `draft_pick`, and
+  `settle_due_drafts`, which `pg_cron` runs every 5 seconds (`bingo_draft_settle`;
+  needs pg_cron 1.5 or later, the project has 1.6). Clients nudge through
+  `POST .../draft/settle` 0 to 1 second after a deadline.
 
 ## Identity
 
@@ -87,7 +91,8 @@ even with exact entries (cause unknown), so phone testing uses the dev-only sign
 
 ## Open Technical Questions
 
-- How draft groups map onto Realtime channels and RLS policies.
+- (Settled in F7: one Realtime channel per league. Draft events go in
+  `league_events`, because every member may see every group's picks.)
 - Whether PNG export is done in the browser or on the server.
 
 ---

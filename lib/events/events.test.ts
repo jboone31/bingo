@@ -196,6 +196,34 @@ describe("describeEvent", () => {
     expect(text("draft_started", {})).toBe("The draft started");
   });
 
+  it("describes picks, finished groups and completion", () => {
+    expect(
+      text("pick_made", {
+        group: 2,
+        round: 3,
+        name: "Sam",
+        text: "Team X wins",
+        auto: false,
+      }),
+    ).toBe("Group 2, round 3: Sam picked \u201cTeam X wins\u201d");
+    expect(
+      text("pick_made", {
+        group: 1,
+        round: 1,
+        name: "Ada",
+        text: "Rain",
+        auto: true,
+      }),
+    ).toBe("Group 1, round 1: Ada picked \u201cRain\u201d (auto)");
+    expect(text("pick_made", {})).toBe("Someone picked \u201ca square\u201d");
+    expect(text("group_finished", { group: 2 })).toBe(
+      "Group 2 finished its draft",
+    );
+    expect(text("draft_completed", { groups: 3 })).toBe(
+      "The draft is complete",
+    );
+  });
+
   it("falls back for unknown types and bad payloads", () => {
     expect(text("draft_pick_made")).toBe("Something changed");
     expect(text("member_joined", { name: 5 })).toBe(

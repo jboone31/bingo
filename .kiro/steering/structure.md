@@ -54,6 +54,8 @@ All API routes use the Node.js runtime and are built on `lib/api`. Pages sit und
   which reads `?cat=&q=&sort=&page=` (`cat` is `c:<name>` or `none`).
 - **Queue**: `app/api/leagues/[leagueId]/queue/` (add, reorder) and
   `.../queue/[submissionId]` (remove). Page: `leagues/[leagueId]/queue`.
+- **Draft**: `app/api/leagues/[leagueId]/draft/pick` and `.../draft/settle` (nudge).
+  Dev: `app/api/dev/draft` (expire turns, bots).
 - **Dev**: `app/api/dev/` (`seed`, `reset` with scope `mine`, `league` or `all`,
   `act-as`, `sign-in`) and the `dev` page, which lists your seed leagues with a Delete
   button each (any status; only leagues with a `seed_scenario` tag you belong to).
@@ -109,7 +111,9 @@ property-tested in isolation. Current modules:
 - `draft/`: draft settings and the start. Pure: `settings.ts` (ranges, parsing,
   `formatSeconds`), `gate.ts` (`requiredPool`, `groupSizes`, `startGate`), `split.ts`
   (balanced random groups), `rules.ts`. Server: `queries.ts`, `start.ts`
-  (`startDraft`, shared by the route and dev seeding) and `read.ts` (groups, RLS).
+  (`startDraft`, shared by the route and dev seeding) and `read.ts` (groups and
+  `getDraftStatus`, RLS). Engine: `engine.ts` (pure model of the SQL engine) and
+  `engine.server.ts` (wrappers for the SQL functions, error mapping).
 
 New domain areas (draft, board) get their own folder here.
 
@@ -120,12 +124,13 @@ Shared React components.
 - `ui/`: the design system (Button, TextField, Panel, Badge, PageHeader, Dialog,
   Toast, EmptyState, ErrorState, Spinner, Skeleton). Each has a CSS Module and a
   test. Styled only from tokens.
-- `dev/`: dev hub and the "acting as" banner (dev tools only).
+- `dev/`: dev hub, the "acting as" banner and `DevDraftPanel` (dev tools only).
 - `pool/`: pool screens' components (list, filter bar, add form, CSV import, row
   actions).
 - `queue/`: the queue list (drag and drop) and the add-to-queue button.
 - `draft/`: the settings page's `DraftSetupPanel` (fields, live gate, Start with its
-  confirmation), the overview's `GateSummary` and `DraftGroups`.
+  confirmation), the overview's `GateSummary`, `DraftGroups`, `DraftStatus` and
+  `Countdown` (server-time countdown that nudges settle).
 - `realtime/`: the Supabase event source, `useLeagueEvents`, and
   `ServerClockProvider` (`useServerNow`), mounted in the signed-in layout.
 - `leagues/`: league screens' components (cards, forms, member list, invite panel,
@@ -142,7 +147,7 @@ Factories for the Supabase client in each runtime: `client.ts` (browser),
 ### `supabase/migrations/`
 
 Numbered SQL files (`NNNN_name.sql`), each wrapped in its own `begin; ... commit;`.
-Applied in order by `npm run db:migrate`. All ten below are applied to the live project.
+Applied in order by `npm run db:migrate`. All eleven below are applied to the live project.
 
 | File | Adds |
 | --- | --- |
@@ -156,6 +161,7 @@ Applied in order by `npm run db:migrate`. All ten below are applied to the live 
 | `0008_league_events` | `league_events`, `leagues.last_event_seq`, `append_league_event`, Realtime publication |
 | `0009_league_events_actor_null` | lets `on delete set null` clear `actor_id` past the immutability trigger |
 | `0010_draft_setup` | `leagues.group_count`, `pick_seconds`, `draft_started_at`, settings guard, `draft_groups`, `draft_group_members` |
+| `0011_draft_engine` | `draft_clocks`, `draft_picks`, the engine functions, membership and queue guards, `available_submissions` views, the `pg_cron` job |
 
 ### `scripts/`
 

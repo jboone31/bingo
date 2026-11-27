@@ -15,8 +15,11 @@ import {
 const names = Object.keys(SCENARIOS);
 
 describe("scenarios", () => {
-  it("has the F2 to F6 scenarios", () => {
+  it("has the F2 to F7 scenarios", () => {
     expect([...names].sort()).toEqual([
+      "draft_expired",
+      "draft_last_round",
+      "draft_mid",
       "draft_started",
       "league_empty",
       "league_full",
@@ -201,12 +204,12 @@ describe("event seeding (F5)", () => {
 });
 
 describe("draft setup scenarios (F6)", () => {
-  it("every plan has valid settings, and only draft_started starts", () => {
+  it("every plan has valid settings, and only draft_* scenarios start", () => {
     for (const name of names) {
       const plan = planFor(name)!;
       expect(parseGroupCount(plan.groupCount).ok).toBe(true);
       expect(parsePickSeconds(plan.pickSeconds).ok).toBe(true);
-      expect(plan.startDraft).toBe(name === "draft_started");
+      expect(plan.startDraft).toBe(name.startsWith("draft_"));
     }
   });
 
@@ -243,5 +246,42 @@ describe("draft setup scenarios (F6)", () => {
       const plan = planFor(name)!;
       if (plan.startDraft) expect(plan.eventCount).toBe(0);
     }
+  });
+});
+
+describe("draft engine scenarios (F7)", () => {
+  it("only started drafts advance, expire or use bots, with equal groups", () => {
+    for (const name of names) {
+      const plan = planFor(name)!;
+      if (!plan.startDraft) {
+        expect(plan.advanceRounds).toBe(0);
+        expect(plan.expireTurns).toBe(false);
+        expect(plan.devBots).toBe(false);
+      }
+      if (plan.advanceRounds > 0) {
+        expect(totalMembers(plan) % plan.groupCount).toBe(0);
+        expect(plan.advanceRounds).toBeLessThan(25);
+      }
+    }
+  });
+
+  it("matches the documented states", () => {
+    expect(planFor("draft_mid")).toMatchObject({
+      advanceRounds: 2,
+      devBots: true,
+    });
+    expect(planFor("draft_expired")).toMatchObject({
+      advanceRounds: 0,
+      expireTurns: true,
+    });
+    expect(planFor("draft_last_round")).toMatchObject({
+      advanceRounds: 24,
+      devBots: false,
+    });
+    expect(planFor("draft_started")).toMatchObject({
+      advanceRounds: 0,
+      expireTurns: false,
+      devBots: false,
+    });
   });
 });

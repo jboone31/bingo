@@ -7,14 +7,18 @@ import {
   mockQueueQueries,
 } from "@/test/helpers/leagueRoutes";
 
-const { getSessionUser, withTransaction, q } = vi.hoisted(() => ({
-  getSessionUser: vi.fn(),
-  withTransaction: vi.fn(),
-  q: {} as Record<string, ReturnType<typeof vi.fn>>,
-}));
+const { getSessionUser, withTransaction, q, settleIfDrafting } = vi.hoisted(
+  () => ({
+    getSessionUser: vi.fn(),
+    withTransaction: vi.fn(),
+    q: {} as Record<string, ReturnType<typeof vi.fn>>,
+    settleIfDrafting: vi.fn(),
+  }),
+);
 vi.mock("@/lib/auth/session", () => ({ getSessionUser }));
 vi.mock("@/lib/db/server", () => ({ withTransaction }));
 vi.mock("@/lib/queue/queries", () => q);
+vi.mock("@/lib/draft/engine.server", () => ({ settleIfDrafting }));
 
 import { DELETE } from "./route";
 
@@ -30,6 +34,7 @@ beforeEach(() => {
     .mockReset()
     .mockImplementation((fn: (tx: unknown) => unknown) => fn({}));
   q.lockMemberForQueue.mockResolvedValue("pre_draft");
+  settleIfDrafting.mockReset().mockResolvedValue(undefined);
 });
 
 describe("DELETE /api/leagues/[leagueId]/queue/[submissionId]", () => {
@@ -61,8 +66,15 @@ describe("DELETE /api/leagues/[leagueId]/queue/[submissionId]", () => {
     expect(q.deleteQueueItem).not.toHaveBeenCalled();
   });
 
-  it("409 after the draft starts", async () => {
+  it("removes during the draft, settling first", async () => {
     q.lockMemberForQueue.mockResolvedValue("drafting");
+    expect((await call()).status).toBe(200);
+    expect(settleIfDrafting).toHaveBeenCalledWith({}, LEAGUE_ID);
+    expect(q.deleteQueueItem).toHaveBeenCalled();
+  });
+
+  it("409 once the draft is over", async () => {
+    q.lockMemberForQueue.mockResolvedValue("in_progress");
     expect((await call()).status).toBe(409);
     expect(q.deleteQueueItem).not.toHaveBeenCalled();
   });

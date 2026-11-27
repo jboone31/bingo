@@ -49,6 +49,22 @@ export async function resetOne(
   return rows.length > 0;
 }
 
+/** Lock a seed league the user belongs to. False if it is not one. */
+export async function lockMySeedLeague(
+  tx: QueryRunner,
+  userId: string,
+  leagueId: string,
+): Promise<boolean> {
+  const { rows } = await tx.query(
+    `select l.id from public.leagues l
+       join public.league_members m on m.league_id = l.id and m.user_id = $1
+      where l.id = $2 and l.seed_scenario is not null
+        for update of l`,
+    [userId, leagueId],
+  );
+  return rows.length > 0;
+}
+
 export interface SeedLeague {
   readonly id: string;
   readonly name: string;

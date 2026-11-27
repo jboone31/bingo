@@ -38,7 +38,7 @@ written and features ship.
 | F4  | Pre-draft pool and queue        | F2, F3         | Done        |
 | F5  | Realtime and event log          | F2             | Done        |
 | F6  | Draft setup and start           | F3, F4         | Done        |
-| F7  | Draft engine and timers         | F5, F6         | Spec written |
+| F7  | Draft engine and timers         | F5, F6         | Done        |
 | F8  | Draft room UI                   | F7             | Not started |
 | F9  | Live feed and big screen        | F7             | Not started |
 | F10 | Board generation                | F7             | Not started |
@@ -46,12 +46,13 @@ written and features ship.
 
 ## Status And Handoff
 
-Built and committed: **F0 to F6**. Nothing is half done. The working tree is clean.
+Built and committed: **F0 to F7**. Nothing is half done. The working tree is clean.
 
-**Next: F7 (Draft engine and timers).** Its spec does not exist yet. Settle its open
-questions with the user first (see the F7 section, including the notes from F5 and F6).
+**Next: F8 (Draft room UI).** Its spec does not exist yet. Settle its open questions
+with the user first (see the F8 section, including the notes from F7).
 
-F6 manual checks (`draft-setup` 6.3 to 6.6) have not been confirmed by the user.
+Unconfirmed manual checks: F6 (`draft-setup` 6.3 to 6.6) and F7 (`draft-engine` 6.3 to
+6.7).
 
 F5 manual checks (`realtime-events` 6.3 to 6.6: Activity list, two-tab live updates,
 offline catch-up, 360px) have not been confirmed by the user.
@@ -269,6 +270,13 @@ From earlier features:
   on demand, and let bots pick for chosen players, so the draft room can be tested
   without waiting.
 
+Decided: the engine is SQL (one implementation for routes and the 5-second `pg_cron`
+backstop) with a pure TypeScript model for tests; per-group clocks; manual picks
+restart the timer, auto-picks keep the schedule so missed turns cascade; picks carry a
+pick number; drafted squares leave the group's queues and pool view only; draft events
+share `league_events` (one channel per league); memberships fixed after the start;
+dev bots and expire-now. See `.kiro/specs/draft-engine/`.
+
 From earlier features:
 - F6 built the start (`lib/draft/start.ts`). After it: `leagues.status = drafting`,
   `draft_started_at` (database time), `pick_seconds`, `group_count`; `draft_groups`
@@ -313,6 +321,18 @@ From earlier features:
 Open: whether the banner is group-wide or league-wide.
 
 From earlier features:
+- F7 built the engine. Pick with `POST .../draft/pick { submissionId, pickNumber }`
+  (refusals: `not_your_turn`, `stale_pick`, `square_taken`, `draft_not_running`).
+  State: `draft_clocks` (per group: `next_pick`, `deadline`) and `draft_picks`, both
+  member-readable; `getDraftStatus` in `lib/draft/read.ts` is a starting point.
+  `pick_made` events carry the whole pick and the next turn (user, deadline), so the
+  room can apply them directly; on a gap, re-read clocks and picks.
+- The pool page already reads `available_submissions` (squares not drafted in the
+  viewer's group), and queues are editable while `drafting`.
+- `Countdown` (`components/draft/`) renders server time and nudges settle once per
+  deadline. Keep its pending-nudge-in-a-ref fix (a per-tick effect cleanup cancelled
+  nudges with a pause longer than a tick).
+- The overview's Draft status panel and `DevDraftPanel` exist; the room can reuse them.
 - Reuse `PoolFilterBar` (takes a `basePath`), `SubmissionList`, `Pagination`,
   `QueueList` and `QueueToggle`. `QueueList` starts over when its `key` changes; the
   queue page keys it by the server's item ids.
@@ -337,6 +357,12 @@ From earlier features:
 
 \1 and stays hidden until boards are generated.
 
+
+From earlier features:
+- F7 calls `draft_complete_if_done` (SQL, migration 0011) in the transaction of the
+  last pick. It sets `in_progress`, `draft_completed_at` and appends
+  `draft_completed`. Add board generation there (a new migration replacing the
+  function). Leagues completed before F10 (seed and test) need a backfill.
 ## F11: Board view and export
 
 - A view of the player's generated card.

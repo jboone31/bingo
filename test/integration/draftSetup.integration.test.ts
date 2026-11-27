@@ -202,7 +202,9 @@ describe.skipIf(!hasDb)("draft setup", { timeout: 120_000 }, () => {
     ).rejects.toThrow(/permission denied/);
   });
 
-  it("removes groups with the league, and lets a deleted account leave its group", async () => {
+  it("removes groups with the league, and refuses deleting an account mid-draft", async () => {
+    // F7: memberships are fixed once the draft starts, so deleting a player's account
+    // fails instead of leaving a hole in the draft.
     const temp = await createUser({ full_name: "D Temp" });
     const id = await createLeague(admin);
     await addMember(id, temp);
@@ -210,8 +212,10 @@ describe.skipIf(!hasDb)("draft setup", { timeout: 120_000 }, () => {
     await withTransaction((tx) =>
       startDraft(tx, id, admin, { members: 2, groupCount: 1 }),
     );
-    await getSql()`delete from auth.users where id = ${temp}`;
-    expect(await groupRows(id)).toHaveLength(1);
+    await expect(
+      getSql()`delete from auth.users where id = ${temp}`,
+    ).rejects.toThrow(/league_not_pre_draft/);
+    expect(await groupRows(id)).toHaveLength(2);
     await getSql()`delete from public.leagues where id = ${id}`;
     const left = await getSql()`
       select 1 from public.draft_groups where league_id = ${id}`;

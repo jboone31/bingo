@@ -36,6 +36,12 @@ export interface ScenarioPlan {
   readonly pickSeconds: number;
   /** Start the draft through the real start code once the pool is in (F6). */
   readonly startDraft: boolean;
+  /** Rounds to auto-pick in every group after the start (F7). Equal groups only. */
+  readonly advanceRounds: number;
+  /** Put every running deadline in the past after seeding (F7). */
+  readonly expireTurns: boolean;
+  /** Seed players pick at once from their queues (F7). */
+  readonly devBots: boolean;
 }
 
 export interface Scenario {
@@ -61,6 +67,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       groupCount: 1,
       pickSeconds: 60,
       startDraft: false,
+      advanceRounds: 0,
+      expireTurns: false,
+      devBots: false,
     },
   },
   league_with_players: {
@@ -80,6 +89,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       groupCount: 1,
       pickSeconds: 60,
       startDraft: false,
+      advanceRounds: 0,
+      expireTurns: false,
+      devBots: false,
     },
   },
   league_full: {
@@ -98,6 +110,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       groupCount: 1,
       pickSeconds: 60,
       startDraft: false,
+      advanceRounds: 0,
+      expireTurns: false,
+      devBots: false,
     },
   },
   league_with_pool: {
@@ -117,6 +132,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       groupCount: 1,
       pickSeconds: 60,
       startDraft: false,
+      advanceRounds: 0,
+      expireTurns: false,
+      devBots: false,
     },
   },
   pool_ready: {
@@ -136,6 +154,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       groupCount: 1,
       pickSeconds: 60,
       startDraft: false,
+      advanceRounds: 0,
+      expireTurns: false,
+      devBots: false,
     },
   },
   queue_started: {
@@ -155,6 +176,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       groupCount: 1,
       pickSeconds: 60,
       startDraft: false,
+      advanceRounds: 0,
+      expireTurns: false,
+      devBots: false,
     },
   },
   league_with_activity: {
@@ -174,6 +198,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       groupCount: 1,
       pickSeconds: 60,
       startDraft: false,
+      advanceRounds: 0,
+      expireTurns: false,
+      devBots: false,
     },
   },
   ready_three_groups: {
@@ -193,6 +220,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       groupCount: 3,
       pickSeconds: 60,
       startDraft: false,
+      advanceRounds: 0,
+      expireTurns: false,
+      devBots: false,
     },
   },
   pool_short: {
@@ -212,6 +242,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       groupCount: 1,
       pickSeconds: 60,
       startDraft: false,
+      advanceRounds: 0,
+      expireTurns: false,
+      devBots: false,
     },
   },
   draft_started: {
@@ -231,6 +264,75 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       groupCount: 3,
       pickSeconds: 60,
       startDraft: true,
+      advanceRounds: 0,
+      expireTurns: false,
+      devBots: false,
+    },
+  },
+  draft_mid: {
+    label: "Draft: mid-way, bots on",
+    description:
+      "Drafting. 15 players in 3 groups, 2 rounds done, bots on: seed players pick at once, so only your turns wait.",
+    plan: {
+      leagueName: "[Seed] Draft mid-way",
+      viewerRole: "admin",
+      fakeMembers: 14,
+      fakeAdmin: false,
+      draftAtOffsetDays: 0,
+      poolSubmissions: 125,
+      viewerQueueSize: 8,
+      fakeQueueSize: 10,
+      eventCount: 0,
+      groupCount: 3,
+      pickSeconds: 60,
+      startDraft: true,
+      advanceRounds: 2,
+      expireTurns: false,
+      devBots: true,
+    },
+  },
+  draft_expired: {
+    label: "Draft: deadlines passed",
+    description:
+      "Drafting. Every group's turn is past its deadline, so the backstop (or the next request) auto-picks once per group within about 5 seconds.",
+    plan: {
+      leagueName: "[Seed] Draft deadlines passed",
+      viewerRole: "admin",
+      fakeMembers: 14,
+      fakeAdmin: false,
+      draftAtOffsetDays: 0,
+      poolSubmissions: 125,
+      viewerQueueSize: 8,
+      fakeQueueSize: 10,
+      eventCount: 0,
+      groupCount: 3,
+      pickSeconds: 60,
+      startDraft: true,
+      advanceRounds: 0,
+      expireTurns: true,
+      devBots: false,
+    },
+  },
+  draft_last_round: {
+    label: "Draft: last round",
+    description:
+      "Drafting. 24 of 25 rounds done in every group, bots off. Turn bots on or expire turns to reach the end.",
+    plan: {
+      leagueName: "[Seed] Draft last round",
+      viewerRole: "admin",
+      fakeMembers: 14,
+      fakeAdmin: false,
+      draftAtOffsetDays: 0,
+      poolSubmissions: 125,
+      viewerQueueSize: 8,
+      fakeQueueSize: 10,
+      eventCount: 0,
+      groupCount: 3,
+      pickSeconds: 60,
+      startDraft: true,
+      advanceRounds: 24,
+      expireTurns: false,
+      devBots: false,
     },
   },
   member_view: {
@@ -250,6 +352,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       groupCount: 1,
       pickSeconds: 60,
       startDraft: false,
+      advanceRounds: 0,
+      expireTurns: false,
+      devBots: false,
     },
   },
 };

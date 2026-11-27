@@ -107,3 +107,20 @@ export async function rewriteOrder(
     [leagueId, userId, ids],
   );
 }
+
+/** Whether the square has been drafted in the caller's group (always false before the start). */
+export async function pickedInMyGroup(
+  tx: QueryRunner,
+  leagueId: string,
+  userId: string,
+  submissionId: string,
+): Promise<boolean> {
+  const { rows } = await tx.query(
+    `select 1
+       from public.draft_picks p
+       join public.draft_group_members m on m.group_id = p.group_id
+      where p.league_id = $1 and m.user_id = $2 and p.submission_id = $3`,
+    [leagueId, userId, submissionId],
+  );
+  return rows.length > 0;
+}

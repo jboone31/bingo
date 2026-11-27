@@ -103,7 +103,7 @@ describe("pool page", () => {
     ).toBeInTheDocument();
   });
 
-  it("hides edit tools and queue buttons after the draft starts", async () => {
+  it("hides edit tools but keeps queue buttons during the draft", async () => {
     m.getLeague.mockResolvedValue({
       id: "L1",
       name: "Office",
@@ -112,6 +112,20 @@ describe("pool page", () => {
     });
     await show();
     expect(screen.queryByRole("button", { name: "Clear pool" })).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "Add to queue" }),
+    ).toBeInTheDocument();
+    expect(m.getQueuedIds).toHaveBeenCalled();
+  });
+
+  it("hides queue buttons once the draft is over", async () => {
+    m.getLeague.mockResolvedValue({
+      id: "L1",
+      name: "Office",
+      status: "in_progress",
+      draftAt: null,
+    });
+    await show();
     expect(screen.queryByRole("button", { name: /queue/i })).toBeNull();
     expect(m.getQueuedIds).not.toHaveBeenCalled();
     expect(screen.getByText("Team X wins")).toBeInTheDocument();

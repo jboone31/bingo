@@ -51,7 +51,9 @@ export default async function PoolPage({
     getPoolPage(leagueId, query, raw.page),
     listCategories(leagueId),
   ]);
-  const queuedIds = preDraft
+  // Queues can change until the draft is over (F7).
+  const queueOpen = league.status !== "in_progress";
+  const queuedIds = queueOpen
     ? await getQueuedIds(
         leagueId,
         user.id,

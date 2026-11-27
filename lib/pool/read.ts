@@ -62,7 +62,14 @@ function applyFilters<
 }
 
 /**
- * One page of the pool, filtered and sorted. Ties always fall back to the order the
+ * Squares the caller can still draft: the whole pool, except (while drafting) those
+ * already picked in the caller's group. RLS still applies through the view.
+ */
+const AVAILABLE = "available_submissions";
+
+/**
+ * One page of the pool, filtered and sorted. While drafting it leaves out squares
+ * already picked in the caller's group; other groups are unaffected. Ties always fall back to the order the
  * rows were added, so paging is stable. `rawPage` is the `?page=` value.
  */
 export async function getPoolPage(
@@ -71,11 +78,15 @@ export async function getPoolPage(
   rawPage: unknown,
 ): Promise<PoolPage> {
   const supabase = await client();
-  const poolTotal = await countPool(leagueId);
+  const { count: available } = await supabase
+    .from(AVAILABLE)
+    .select("id", { count: "exact", head: true })
+    .eq("league_id", leagueId);
+  const poolTotal = available ?? 0;
 
   const counted = applyFilters(
     supabase
-      .from("submissions")
+      .from(AVAILABLE)
       .select("id", { count: "exact", head: true })
       .eq("league_id", leagueId) as never,
     query,
@@ -88,7 +99,7 @@ export async function getPoolPage(
 
   let select = applyFilters(
     supabase
-      .from("submissions")
+      .from(AVAILABLE)
       .select("id, text, submitter, category")
       .eq("league_id", leagueId) as never,
     query,
@@ -110,7 +121,7 @@ export async function listCategories(
 ): Promise<CategoryOption[]> {
   const supabase = await client();
   const { data } = await supabase
-    .from("pool_categories")
+    .from("available_pool_categories")
     .select("key, label, count")
     .eq("league_id", leagueId)
     .order("label", { ascending: true });

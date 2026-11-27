@@ -23,6 +23,11 @@ vi.mock("@/lib/leagues/queries", () => q);
 vi.mock("@/lib/events/append", () => ev);
 vi.mock("@/lib/draft/queries", () => d);
 vi.mock("@/lib/pool/queries", () => p);
+vi.mock("@/lib/draft/engine.server", () => ({
+  createClocks: vi.fn(async () => {
+    order.push("createClocks");
+  }),
+}));
 
 import { POST } from "./route";
 
@@ -87,7 +92,13 @@ describe("POST /api/leagues/[leagueId]/start", () => {
     const res = await start();
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
-    expect(order).toEqual(["lock", "markStarted", "insertGroups", "event"]);
+    expect(order).toEqual([
+      "lock",
+      "markStarted",
+      "insertGroups",
+      "createClocks",
+      "event",
+    ]);
     const plan = d.insertGroups.mock.calls[0][2] as {
       number: number;
       members: { userId: string; position: number }[];

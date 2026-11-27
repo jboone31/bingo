@@ -8,14 +8,18 @@ import {
   mockQueueQueries,
 } from "@/test/helpers/leagueRoutes";
 
-const { getSessionUser, withTransaction, q } = vi.hoisted(() => ({
-  getSessionUser: vi.fn(),
-  withTransaction: vi.fn(),
-  q: {} as Record<string, ReturnType<typeof vi.fn>>,
-}));
+const { getSessionUser, withTransaction, q, settleIfDrafting } = vi.hoisted(
+  () => ({
+    getSessionUser: vi.fn(),
+    withTransaction: vi.fn(),
+    q: {} as Record<string, ReturnType<typeof vi.fn>>,
+    settleIfDrafting: vi.fn(),
+  }),
+);
 vi.mock("@/lib/auth/session", () => ({ getSessionUser }));
 vi.mock("@/lib/db/server", () => ({ withTransaction }));
 vi.mock("@/lib/queue/queries", () => q);
+vi.mock("@/lib/draft/engine.server", () => ({ settleIfDrafting }));
 
 import { POST, PUT } from "./route";
 
@@ -37,6 +41,8 @@ beforeEach(() => {
   q.submissionInLeague.mockResolvedValue(true);
   q.getQueueIds.mockResolvedValue([A, B]);
   q.insertQueueItem.mockResolvedValue(true);
+  q.pickedInMyGroup = vi.fn().mockResolvedValue(false);
+  settleIfDrafting.mockReset().mockResolvedValue(undefined);
 });
 
 describe("POST /api/leagues/[leagueId]/queue", () => {
@@ -63,14 +69,43 @@ describe("POST /api/leagues/[leagueId]/queue", () => {
     expect(q.insertQueueItem).not.toHaveBeenCalled();
   });
 
-  it("409 once the draft has started", async () => {
-    q.lockMemberForQueue.mockResolvedValue("drafting");
+  it("409 once the draft is over", async () => {
+    q.lockMemberForQueue.mockResolvedValue("in_progress");
     const res = await add({ submissionId: SUBMISSION_ID });
     expect(res.status).toBe(409);
     expect(await res.json()).toEqual({
       ok: false,
       reason: "league_not_pre_draft",
     });
+    expect(q.insertQueueItem).not.toHaveBeenCalled();
+  });
+
+  it("adds during the draft, settling first", async () => {
+    q.lockMemberForQueue.mockResolvedValue("drafting");
+    const order: string[] = [];
+    settleIfDrafting.mockImplementation(async () => order.push("settle"));
+    q.lockMemberForQueue.mockImplementation(async () => {
+      order.push("lock");
+      return "drafting";
+    });
+    const res = await add({ submissionId: SUBMISSION_ID });
+    expect(res.status).toBe(201);
+    expect(order).toEqual(["settle", "lock"]);
+    expect(settleIfDrafting).toHaveBeenCalledWith({}, LEAGUE_ID);
+    expect(q.pickedInMyGroup).toHaveBeenCalledWith(
+      {},
+      LEAGUE_ID,
+      USER_ID,
+      SUBMISSION_ID,
+    );
+  });
+
+  it("409 square_taken for a square drafted in your group", async () => {
+    q.lockMemberForQueue.mockResolvedValue("drafting");
+    q.pickedInMyGroup.mockResolvedValue(true);
+    const res = await add({ submissionId: SUBMISSION_ID });
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ ok: false, reason: "square_taken" });
     expect(q.insertQueueItem).not.toHaveBeenCalled();
   });
 
@@ -124,6 +159,14 @@ describe("POST /api/leagues/[leagueId]/queue", () => {
 });
 
 describe("PUT /api/leagues/[leagueId]/queue", () => {
+  it("reorders during the draft after settling, and refuses once it is over", async () => {
+    q.lockMemberForQueue.mockResolvedValue("drafting");
+    expect((await reorder({ order: [B, A] })).status).toBe(200);
+    expect(settleIfDrafting).toHaveBeenCalledWith({}, LEAGUE_ID);
+    q.lockMemberForQueue.mockResolvedValue("in_progress");
+    expect((await reorder({ order: [B, A] })).status).toBe(409);
+  });
+
   it.each([
     ["not an array", { order: "x" }],
     ["bad id", { order: [A, "nope"] }],

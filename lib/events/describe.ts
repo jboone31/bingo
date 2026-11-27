@@ -61,6 +61,25 @@ export function describeEvent(
       }
       return `Draft settings changed: ${groups} ${groups === 1 ? "group" : "groups"}, ${formatSeconds(seconds)} per pick`;
     }
+    case "pick_made": {
+      const group = Number(p.group);
+      const round = Number(p.round);
+      const who = str(p.name, "Someone");
+      const what = str(p.text, "a square");
+      const where =
+        Number.isInteger(group) && Number.isInteger(round)
+          ? `Group ${group}, round ${round}: `
+          : "";
+      return `${where}${who} picked \u201c${what}\u201d${p.auto === true ? " (auto)" : ""}`;
+    }
+    case "group_finished": {
+      const group = Number(p.group);
+      return Number.isInteger(group)
+        ? `Group ${group} finished its draft`
+        : "A group finished its draft";
+    }
+    case "draft_completed":
+      return "The draft is complete";
     case "draft_started": {
       const groups = Number(p.groupCount);
       if (!Number.isInteger(groups) || groups < 2) return "The draft started";

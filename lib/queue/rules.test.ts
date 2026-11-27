@@ -10,14 +10,14 @@ const status = fc.constantFrom<LeagueStatus>(
 );
 
 describe("queue rules", () => {
-  it("editing is allowed only while pre_draft", () => {
+  it("editing is allowed while pre_draft and drafting", () => {
     fc.assert(
       fc.property(status, (s) => {
-        expect(canEditQueue({ status: s }).ok).toBe(s === "pre_draft");
+        expect(canEditQueue({ status: s }).ok).toBe(s !== "in_progress");
       }),
       { numRuns: 50 },
     );
-    expect(canEditQueue({ status: "drafting" })).toEqual({
+    expect(canEditQueue({ status: "in_progress" })).toEqual({
       ok: false,
       reason: "league_not_pre_draft",
       status: 409,
@@ -37,20 +37,20 @@ describe("queue rules", () => {
     });
   });
 
-  it("adding is allowed exactly when pre_draft and under the limit", () => {
+  it("adding is allowed exactly when editable and under the limit", () => {
     fc.assert(
       fc.property(status, fc.integer({ min: 0, max: 300 }), (s, count) => {
         expect(canAddToQueue({ status: s, count }).ok).toBe(
-          s === "pre_draft" && count < QUEUE_MAX,
+          s !== "in_progress" && count < QUEUE_MAX,
         );
       }),
       { numRuns: 200 },
     );
   });
 
-  it("a started draft wins over a full queue", () => {
+  it("a finished draft wins over a full queue", () => {
     expect(
-      canAddToQueue({ status: "drafting", count: QUEUE_MAX }),
+      canAddToQueue({ status: "in_progress", count: QUEUE_MAX }),
     ).toMatchObject({
       reason: "league_not_pre_draft",
     });

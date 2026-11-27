@@ -32,6 +32,10 @@ const MESSAGES: Record<string, string> = {
   pool_too_small: "The pool does not have enough squares for this draft yet.",
   draft_setup_changed:
     "Players or groups changed. Check the new numbers and start again.",
+  draft_not_running: "The draft is not running.",
+  not_your_turn: "It is not your turn.",
+  stale_pick: "That turn has passed. Showing the latest draft.",
+  square_taken: "That square has already been drafted in your group.",
   queue_changed:
     "Your queue was changed somewhere else. Showing the latest version.",
 };

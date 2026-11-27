@@ -6,6 +6,7 @@ import { appendLeagueEvent } from "@/lib/events/append";
 import { draftStarted } from "@/lib/events/payload";
 import { lockLeagueForMember } from "@/lib/leagues/guard";
 import { countSubmissions } from "@/lib/pool/queries";
+import { createClocks } from "./engine.server";
 import { insertGroups, listMemberIds, markStarted } from "./queries";
 import { canStart } from "./rules";
 import { splitIntoGroups, type RandomInt } from "./split";
@@ -46,6 +47,7 @@ export async function startDraft(
   await markStarted(tx, leagueId);
   const plan = splitIntoGroups(memberIds, league.groupCount, random);
   await insertGroups(tx, leagueId, plan);
+  await createClocks(tx, leagueId);
   await appendLeagueEvent(
     tx,
     leagueId,

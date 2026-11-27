@@ -3,6 +3,7 @@ import { handle } from "@/lib/api/handler";
 import { parseUuid } from "@/lib/api/ids";
 import { ok } from "@/lib/api/response";
 import { withTransaction } from "@/lib/db/server";
+import { settleIfDrafting } from "@/lib/draft/engine.server";
 import { assertAllowed } from "@/lib/leagues/guard";
 import { deleteQueueItem, lockMemberForQueue } from "@/lib/queue/queries";
 import { canEditQueue } from "@/lib/queue/rules";
@@ -21,6 +22,7 @@ export const DELETE = handle<
   }),
   run: async ({ user, input }) =>
     withTransaction(async (tx) => {
+      await settleIfDrafting(tx, input.leagueId);
       const status = await lockMemberForQueue(tx, input.leagueId, user.id);
       if (status === null) throw new ApiError("league_not_found", 404);
       assertAllowed(canEditQueue({ status }));

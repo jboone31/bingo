@@ -29,6 +29,10 @@ export interface LeagueDetail {
   readonly groupCount: number;
   readonly pickSeconds: number;
   readonly draftStartedAt: string | null;
+  readonly draftCompletedAt: string | null;
+  /** Dev tools: the seed scenario tag, or null for a real league. */
+  readonly seedScenario: string | null;
+  readonly devBots: boolean;
 }
 
 export interface MemberInfo {
@@ -69,7 +73,7 @@ export const getLeague = cache(
     const { data } = await supabase
       .from("leagues")
       .select(
-        "id, name, status, draft_at, join_code, group_count, pick_seconds, draft_started_at",
+        "id, name, status, draft_at, join_code, group_count, pick_seconds, draft_started_at, draft_completed_at, seed_scenario, dev_bots",
       )
       .eq("id", id)
       .maybeSingle();
@@ -83,6 +87,9 @@ export const getLeague = cache(
       groupCount: data.group_count ?? 1,
       pickSeconds: data.pick_seconds ?? 60,
       draftStartedAt: data.draft_started_at ?? null,
+      draftCompletedAt: data.draft_completed_at ?? null,
+      seedScenario: data.seed_scenario ?? null,
+      devBots: data.dev_bots === true,
     };
   },
 );

@@ -156,12 +156,16 @@ describe.skipIf(!hasDb)("queue", { timeout: 60_000 }, () => {
       await expect(put(l, admin, ids[200], 201)).rejects.toThrow(/queue_full/);
     }, 120_000);
 
-    it("refuses changes once the league has started, but lets the league be deleted", async () => {
+    it("allows changes while drafting (F7), refuses them once in progress, and lets the league be deleted", async () => {
       const l = await createLeague(admin);
       await addMember(l, member);
-      const ids = await makeSubmissions(l, 2);
+      const ids = await makeSubmissions(l, 3);
       await put(l, member, ids[0], 1);
       await getSql()`update public.leagues set status = 'drafting' where id = ${l}`;
+      await put(l, member, ids[2], 3);
+      await getSql()`delete from public.queue_items
+                      where league_id = ${l} and submission_id = ${ids[2]}`;
+      await getSql()`update public.leagues set status = 'in_progress' where id = ${l}`;
       await expect(put(l, member, ids[1], 2)).rejects.toThrow(
         /league_not_pre_draft/,
       );

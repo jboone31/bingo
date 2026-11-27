@@ -25,7 +25,8 @@ export default async function QueuePage({
     notFound();
   }
   const items = await getQueue(leagueId, user.id);
-  const editable = league.status === "pre_draft";
+  // Queues can change until the draft is over (F7).
+  const editable = league.status !== "in_progress";
 
   return (
     <>
@@ -34,7 +35,7 @@ export default async function QueuePage({
         subtitle={
           editable
             ? "Drag the handle or use the arrows to rank the squares you want."
-            : "The draft has started. Your queue is read only."
+            : "The draft is over. Your queue is read only."
         }
       />
       <DraftDateLine draftAt={league.draftAt} />

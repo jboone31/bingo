@@ -9,6 +9,7 @@ import {
   seedQueueOrder,
   totalMembers,
 } from "./scenarios";
+import { devAdvance } from "@/lib/draft/engine.server";
 import { startDraft } from "@/lib/draft/start";
 import { insertSeedEvents } from "./seedEvents";
 import { insertSeedQueue } from "./seedQueue";
@@ -95,6 +96,23 @@ export async function seedScenario(
         members: totalMembers(plan),
         groupCount: plan.groupCount,
       });
+      const perGroup = Math.floor(totalMembers(plan) / plan.groupCount);
+      if (plan.advanceRounds > 0) {
+        await devAdvance(tx, id, plan.advanceRounds * perGroup);
+      }
+      if (plan.expireTurns) {
+        await tx.query(
+          `update public.draft_clocks set deadline = now() - interval '1 second'
+            where league_id = $1 and finished_at is null`,
+          [id],
+        );
+      }
+      if (plan.devBots) {
+        await tx.query(
+          `update public.leagues set dev_bots = true where id = $1`,
+          [id],
+        );
+      }
     }
     return id;
   });

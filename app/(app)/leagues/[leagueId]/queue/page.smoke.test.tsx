@@ -79,11 +79,25 @@ describe("queue page", () => {
     ).toHaveAttribute("href", "/leagues/L1/pool");
   });
 
-  it("is read only after the draft starts", async () => {
+  it("stays editable during the draft", async () => {
     m.getLeague.mockResolvedValue({
       id: "L1",
       name: "Office",
       status: "drafting",
+      draftAt: null,
+    });
+    await show();
+    expect(screen.queryByText(/read only/)).toBeNull();
+    expect(
+      screen.getAllByRole("button", { name: /Move up/ }).length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("is read only once the draft is over", async () => {
+    m.getLeague.mockResolvedValue({
+      id: "L1",
+      name: "Office",
+      status: "in_progress",
       draftAt: null,
     });
     await show();

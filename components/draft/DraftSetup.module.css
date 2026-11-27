@@ -56,3 +56,7 @@
     grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
   }
 }
+.countdown {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}

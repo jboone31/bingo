@@ -4,12 +4,14 @@ import { handle } from "@/lib/api/handler";
 import { parseUuid } from "@/lib/api/ids";
 import { ok } from "@/lib/api/response";
 import { withTransaction } from "@/lib/db/server";
+import { settleIfDrafting } from "@/lib/draft/engine.server";
 import { assertAllowed } from "@/lib/leagues/guard";
 import { isPermutation } from "@/lib/queue/order";
 import {
   getQueueIds,
   insertQueueItem,
   lockMemberForQueue,
+  pickedInMyGroup,
   rewriteOrder,
   submissionInLeague,
 } from "@/lib/queue/queries";
@@ -31,11 +33,18 @@ export const POST = handle<{ leagueId: string; submissionId: string }, Params>({
   },
   run: async ({ user, input }) =>
     withTransaction(async (tx) => {
+      await settleIfDrafting(tx, input.leagueId);
       const status = await lockMemberForQueue(tx, input.leagueId, user.id);
       if (status === null) throw new ApiError("league_not_found", 404);
       assertAllowed(canEditQueue({ status }));
       if (!(await submissionInLeague(tx, input.leagueId, input.submissionId))) {
         throw new ApiError("submission_not_found", 404);
+      }
+      if (
+        status === "drafting" &&
+        (await pickedInMyGroup(tx, input.leagueId, user.id, input.submissionId))
+      ) {
+        throw new ApiError("square_taken", 409);
       }
       const current = await getQueueIds(tx, input.leagueId, user.id);
       if (current.includes(input.submissionId)) {
@@ -65,6 +74,7 @@ export const PUT = handle<{ leagueId: string; order: string[] }, Params>({
   },
   run: async ({ user, input }) =>
     withTransaction(async (tx) => {
+      await settleIfDrafting(tx, input.leagueId);
       const status = await lockMemberForQueue(tx, input.leagueId, user.id);
       if (status === null) throw new ApiError("league_not_found", 404);
       assertAllowed(canEditQueue({ status }));
