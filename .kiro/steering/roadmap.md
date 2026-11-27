@@ -39,7 +39,7 @@ written and features ship.
 | F5  | Realtime and event log          | F2             | Done        |
 | F6  | Draft setup and start           | F3, F4         | Done        |
 | F7  | Draft engine and timers         | F5, F6         | Done        |
-| F8  | Draft room UI                   | F7             | Not started |
+| F8  | Draft room UI                   | F7             | Spec written |
 | F9  | Live feed and big screen        | F7             | Not started |
 | F10 | Board generation                | F7             | Not started |
 | F11 | Board view and export           | F10            | Not started |
