@@ -56,6 +56,12 @@ create index draft_clocks_due_idx on public.draft_clocks (deadline) where finish
 - `queue_items_guard` is replaced: changes are allowed in `pre_draft` and `drafting`,
   and refused in `in_progress`. The cascade case and the 200 cap are unchanged.
 - No Realtime publication for the new tables. Clients learn from `league_events`.
+- View `available_submissions` (`security_invoker`, so `submissions` RLS applies):
+  submissions minus those picked in the caller's group, but only while the league is
+  `drafting`. Otherwise it is the whole pool. It uses `(select auth.uid())` against
+  `draft_group_members`. `available_pool_categories` does the same for the category
+  counts. Both get `grant select` to `authenticated`. The pool page reads these views,
+  so the pool hides a square for its group and no other group is affected.
 
 ## Engine Functions
 All are `security definer`, `search_path = ''`, with execute revoked from `public`,
@@ -149,6 +155,8 @@ It mirrors the SQL for property tests:
   It maps the raised reasons to `ApiError` (409; 404 for `submission_not_found`).
   Unknown database errors pass through to `handle`'s 500.
 - `startDraft` also calls `create_draft_clocks`.
+- `lib/pool/read.ts`: `getPoolPage` and `listCategories` read the `available_` views.
+  `countPool` (the start gate) keeps counting the whole pool.
 - `lib/draft/read.ts` gets `getDraftStatus(leagueId)` (RLS): clocks with the user on
   the clock and their name, plus the last 5 picks per group.
 - Queue routes (`POST`, `PUT`, `DELETE`): when the league is `drafting`, call

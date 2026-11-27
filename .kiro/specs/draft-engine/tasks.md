@@ -18,6 +18,9 @@
         messages. _R2, R3.5_
   - [ ] 3.3 Queue rules and routes in `drafting`: settle first, `square_taken`, refuse
         in `in_progress`; update tests that expected 409. _R3.7, R4_
+  - [ ] 3.6 Pool page reads `available_submissions` and
+        `available_pool_categories`; integration test that a pick hides the square in
+        its group only. _R4.5_
   - [ ] 3.4 Event builders and text (`pick_made`, `group_finished`,
         `draft_completed`). _R2.5, R5_
   - [ ] 3.5 `POST /api/dev/draft` with route tests. _R8_

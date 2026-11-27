@@ -27,8 +27,12 @@ Depends on F5 and F6. Rules referenced: `draft-rules.md` (The Draft, Boards),
 - **Picking**: only the player on the clock picks, never the admin for someone else.
   The request carries the pick number it is for, so a repeat succeeds without a second
   pick and a stale request is refused.
-- **Picked squares leave queues**: when a square is picked in a group, it is removed
-  from the queue of every player in that group, in the same transaction.
+- **Picked squares leave the group's queues and pool**: when a square is picked in a
+  group, it is removed from the queue of every player in that group, in the same
+  transaction. While `drafting`, the pool hides it from that group's players. Nothing
+  changes for other groups: the square stays in their pool and queues until it is
+  picked there. The submission row is never deleted (other groups, picks and boards
+  point at it).
 - **Auto-pick**: the top square in the player's queue that is still available in
   their group, else a random available square. Because the pool passed the start gate,
   a square is always available.
@@ -117,6 +121,9 @@ Depends on F5 and F6. Rules referenced: `draft-rules.md` (The Draft, Boards),
    `square_taken`.
 3. A pick removes that square from the queue of every member of the group.
 4. Queue edits are refused once the league is `in_progress`.
+5. While `drafting`, the pool page lists, counts and filters only squares not picked in
+   the viewer's group. Players in other groups still see the square until it is picked
+   in their group.
 ### R5. Completion
 1. When a group's last pick is made, a `group_finished` event is appended.
 2. When every group has finished, in the same transaction:

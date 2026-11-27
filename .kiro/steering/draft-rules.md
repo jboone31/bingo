@@ -68,6 +68,9 @@ for behavior. Specs refine them but should not contradict them. Items marked
 - Within a group, the draft is a **snake**: the order reverses each round. The
   starting order is random per group.
 - A square can be drafted once per group. It stays available in other groups.
+- When a square is drafted, it leaves the queue of every player in that group, and the
+  pool stops showing it to that group. Other groups still see it and keep it queued
+  until it is drafted there.
 - There are **25 rounds**, one pick per player per round.
 - Each pick has a time limit set by the admin per league before the start: a whole
   number of seconds from 10 to 900 (15 minutes, for slow drafts), default 60.
