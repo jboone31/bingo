@@ -26,6 +26,7 @@ export function ConfirmAction({
   after,
   successMessage,
   disabled = false,
+  refreshOnError = false,
 }: {
   label: string;
   variant?: ButtonVariant;
@@ -37,6 +38,8 @@ export function ConfirmAction({
   after: AfterAction;
   successMessage?: string;
   disabled?: boolean;
+  /** Reload the page's data after a refusal too, so it shows what changed. */
+  refreshOnError?: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -56,6 +59,7 @@ export function ConfirmAction({
       if (!res.ok) {
         toast.show(reasonMessage(data.reason), "danger");
         setOpen(false);
+        if (refreshOnError) router.refresh();
         return;
       }
       if (successMessage) toast.show(successMessage, "success");

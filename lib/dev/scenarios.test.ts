@@ -1,4 +1,6 @@
 import fc from "fast-check";
+import { requiredPool, startGate } from "@/lib/draft/gate";
+import { parseGroupCount, parsePickSeconds } from "@/lib/draft/settings";
 import { parseCategory, parseSubmitter, parseText } from "@/lib/pool/fields";
 import { describe, expect, it } from "vitest";
 import {
@@ -13,8 +15,9 @@ import {
 const names = Object.keys(SCENARIOS);
 
 describe("scenarios", () => {
-  it("has the F2 to F5 scenarios", () => {
+  it("has the F2 to F6 scenarios", () => {
     expect([...names].sort()).toEqual([
+      "draft_started",
       "league_empty",
       "league_full",
       "league_with_activity",
@@ -22,7 +25,9 @@ describe("scenarios", () => {
       "league_with_pool",
       "member_view",
       "pool_ready",
+      "pool_short",
       "queue_started",
+      "ready_three_groups",
     ]);
   });
 
@@ -192,5 +197,51 @@ describe("event seeding (F5)", () => {
       ),
       { numRuns: 100 },
     );
+  });
+});
+
+describe("draft setup scenarios (F6)", () => {
+  it("every plan has valid settings, and only draft_started starts", () => {
+    for (const name of names) {
+      const plan = planFor(name)!;
+      expect(parseGroupCount(plan.groupCount).ok).toBe(true);
+      expect(parsePickSeconds(plan.pickSeconds).ok).toBe(true);
+      expect(plan.startDraft).toBe(name === "draft_started");
+    }
+  });
+
+  it("ready_three_groups and draft_started pass the gate exactly", () => {
+    for (const name of ["ready_three_groups", "draft_started"]) {
+      const plan = planFor(name)!;
+      const members = totalMembers(plan);
+      expect(members).toBe(15);
+      expect(plan.groupCount).toBe(3);
+      expect(plan.poolSubmissions).toBe(requiredPool(members, plan.groupCount));
+      expect(
+        startGate({
+          members,
+          groups: plan.groupCount,
+          pool: plan.poolSubmissions,
+        }).ok,
+      ).toBe(true);
+    }
+  });
+
+  it("pool_short is blocked by the pool", () => {
+    const plan = planFor("pool_short")!;
+    expect(
+      startGate({
+        members: totalMembers(plan),
+        groups: plan.groupCount,
+        pool: plan.poolSubmissions,
+      }),
+    ).toMatchObject({ ok: false, reason: "pool_too_small", needed: 375 });
+  });
+
+  it("a started scenario seeds no past events (they would clash with the start's)", () => {
+    for (const name of names) {
+      const plan = planFor(name)!;
+      if (plan.startDraft) expect(plan.eventCount).toBe(0);
+    }
   });
 });

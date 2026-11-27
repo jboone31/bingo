@@ -40,13 +40,17 @@ for behavior. Specs refine them but should not contradict them. Items marked
 - A queue is private to its owner, holds up to 200 squares, and is edited while
   `pre_draft` (and during the draft, from F7). Removing a square from the pool removes
   it from every queue.
-- The admin sets a draft date. It is shown to all members.
-- The admin sets the number of draft groups and can change it any time before the
+- The admin sets a draft date. It is shown to all members. It does not gate the
+  start: the admin starts whenever they choose.
+- The admin sets the number of draft groups (1 to 10, default 1) and can change it
+  any time before the start. "At least as many players as groups" is checked at the
   start.
 
 ## Starting The Draft
 
-- The admin starts the draft after an explicit confirmation.
+- The admin starts the draft after an explicit confirmation. The start is refused if
+  the player or group count changed since the admin confirmed it. A one-player league
+  can start.
 - **Start gate**: the pool must hold at least `ceil(N / G) x 25` submissions, where
   `N` is the number of members and `G` the number of groups. The admin screen shows
   this number as `G` changes. Example: 15 players in 1 group need 375; 15 players in
@@ -63,8 +67,8 @@ for behavior. Specs refine them but should not contradict them. Items marked
   starting order is random per group.
 - A square can be drafted once per group. It stays available in other groups.
 - There are **25 rounds**, one pick per player per round.
-- Each pick has a time limit set by the admin per league, default 60 seconds
-  **(assumption)**.
+- Each pick has a time limit set by the admin per league before the start: a whole
+  number of seconds from 10 to 900 (15 minutes, for slow drafts), default 60.
 - **Auto-pick**: if the clock runs out, the top square in the player's queue that is
   still available is drafted immediately. If the queue has nothing available, a random
   available square is drafted.

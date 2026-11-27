@@ -26,6 +26,12 @@ const MESSAGES: Record<string, string> = {
   csv_invalid: "Some rows have problems. Nothing was imported.",
   submission_not_found: "That square no longer exists.",
   queue_full: "Your queue is full. The limit is 200 squares.",
+  invalid_group_count: "Choose 1 to 10 groups.",
+  invalid_pick_seconds: "Enter a whole number of seconds from 10 to 900.",
+  too_few_players: "There are fewer players than groups.",
+  pool_too_small: "The pool does not have enough squares for this draft yet.",
+  draft_setup_changed:
+    "Players or groups changed. Check the new numbers and start again.",
   queue_changed:
     "Your queue was changed somewhere else. Showing the latest version.",
 };

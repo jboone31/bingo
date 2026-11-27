@@ -46,6 +46,9 @@ export const league = (over: Record<string, unknown> = {}) => ({
   status: "pre_draft",
   draftAt: null,
   joinCode: "K7P2QX9M",
+  groupCount: 1,
+  pickSeconds: 60,
+  draftStartedAt: null,
   ...over,
 });
 

@@ -30,6 +30,12 @@ export interface ScenarioPlan {
   readonly fakeQueueSize: number;
   /** League events to seed, oldest first, spread over the past (F5). */
   readonly eventCount: number;
+  /** Draft groups (F6). */
+  readonly groupCount: number;
+  /** Seconds per pick (F6). */
+  readonly pickSeconds: number;
+  /** Start the draft through the real start code once the pool is in (F6). */
+  readonly startDraft: boolean;
 }
 
 export interface Scenario {
@@ -52,6 +58,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       viewerQueueSize: 0,
       fakeQueueSize: 0,
       eventCount: 0,
+      groupCount: 1,
+      pickSeconds: 60,
+      startDraft: false,
     },
   },
   league_with_players: {
@@ -68,6 +77,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       viewerQueueSize: 0,
       fakeQueueSize: 0,
       eventCount: 0,
+      groupCount: 1,
+      pickSeconds: 60,
+      startDraft: false,
     },
   },
   league_full: {
@@ -83,6 +95,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       viewerQueueSize: 0,
       fakeQueueSize: 0,
       eventCount: 0,
+      groupCount: 1,
+      pickSeconds: 60,
+      startDraft: false,
     },
   },
   league_with_pool: {
@@ -99,6 +114,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       viewerQueueSize: 0,
       fakeQueueSize: 0,
       eventCount: 0,
+      groupCount: 1,
+      pickSeconds: 60,
+      startDraft: false,
     },
   },
   pool_ready: {
@@ -115,6 +133,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       viewerQueueSize: 0,
       fakeQueueSize: 0,
       eventCount: 0,
+      groupCount: 1,
+      pickSeconds: 60,
+      startDraft: false,
     },
   },
   queue_started: {
@@ -131,6 +152,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       viewerQueueSize: 8,
       fakeQueueSize: 10,
       eventCount: 0,
+      groupCount: 1,
+      pickSeconds: 60,
+      startDraft: false,
     },
   },
   league_with_activity: {
@@ -147,6 +171,66 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       viewerQueueSize: 0,
       fakeQueueSize: 0,
       eventCount: 60,
+      groupCount: 1,
+      pickSeconds: 60,
+      startDraft: false,
+    },
+  },
+  ready_three_groups: {
+    label: "Ready: three groups",
+    description:
+      "Pre-draft. You are the admin with 14 players (15 in all), 3 groups and 125 squares: exactly enough to start.",
+    plan: {
+      leagueName: "[Seed] Ready, three groups",
+      viewerRole: "admin",
+      fakeMembers: 14,
+      fakeAdmin: false,
+      draftAtOffsetDays: 7,
+      poolSubmissions: 125,
+      viewerQueueSize: 0,
+      fakeQueueSize: 0,
+      eventCount: 0,
+      groupCount: 3,
+      pickSeconds: 60,
+      startDraft: false,
+    },
+  },
+  pool_short: {
+    label: "Pool too small",
+    description:
+      "Pre-draft. You are the admin with 14 players (15 in all), 1 group and 100 of the 375 squares needed, so Start is blocked.",
+    plan: {
+      leagueName: "[Seed] Pool too small",
+      viewerRole: "admin",
+      fakeMembers: 14,
+      fakeAdmin: false,
+      draftAtOffsetDays: 7,
+      poolSubmissions: 100,
+      viewerQueueSize: 0,
+      fakeQueueSize: 0,
+      eventCount: 0,
+      groupCount: 1,
+      pickSeconds: 60,
+      startDraft: false,
+    },
+  },
+  draft_started: {
+    label: "Draft started",
+    description:
+      "Drafting. As Ready: three groups, then started by the real start code. Queues of 8 for you and 10 for each seed player. No clock until F7.",
+    plan: {
+      leagueName: "[Seed] Draft started",
+      viewerRole: "admin",
+      fakeMembers: 14,
+      fakeAdmin: false,
+      draftAtOffsetDays: 0,
+      poolSubmissions: 125,
+      viewerQueueSize: 8,
+      fakeQueueSize: 10,
+      eventCount: 0,
+      groupCount: 3,
+      pickSeconds: 60,
+      startDraft: true,
     },
   },
   member_view: {
@@ -163,6 +247,9 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       viewerQueueSize: 0,
       fakeQueueSize: 0,
       eventCount: 0,
+      groupCount: 1,
+      pickSeconds: 60,
+      startDraft: false,
     },
   },
 };

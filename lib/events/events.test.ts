@@ -179,8 +179,25 @@ describe("describeEvent", () => {
     );
   });
 
+  it("describes the draft events", () => {
+    expect(
+      text("draft_settings_changed", { groupCount: 3, pickSeconds: 90 }),
+    ).toBe("Draft settings changed: 3 groups, 1 min 30 s per pick");
+    expect(
+      text("draft_settings_changed", { groupCount: 1, pickSeconds: 60 }),
+    ).toBe("Draft settings changed: 1 group, 1 min per pick");
+    expect(text("draft_settings_changed", { groupCount: "x" })).toBe(
+      "The draft settings changed",
+    );
+    expect(text("draft_started", { groupCount: 3, sizes: [5, 5, 5] })).toBe(
+      "The draft started with 3 groups",
+    );
+    expect(text("draft_started", { groupCount: 1 })).toBe("The draft started");
+    expect(text("draft_started", {})).toBe("The draft started");
+  });
+
   it("falls back for unknown types and bad payloads", () => {
-    expect(text("draft_pick")).toBe("Something changed");
+    expect(text("draft_pick_made")).toBe("Something changed");
     expect(text("member_joined", { name: 5 })).toBe(
       "Someone joined the league",
     );

@@ -1,3 +1,4 @@
+import { formatSeconds } from "@/lib/draft/settings";
 import {
   POOL_CHANGE_KINDS,
   type LeagueEvent,
@@ -52,6 +53,19 @@ export function describeEvent(
       return "The join code was regenerated";
     case "pool_changed":
       return describePool(p);
+    case "draft_settings_changed": {
+      const groups = Number(p.groupCount);
+      const seconds = Number(p.pickSeconds);
+      if (!Number.isInteger(groups) || !Number.isInteger(seconds)) {
+        return "The draft settings changed";
+      }
+      return `Draft settings changed: ${groups} ${groups === 1 ? "group" : "groups"}, ${formatSeconds(seconds)} per pick`;
+    }
+    case "draft_started": {
+      const groups = Number(p.groupCount);
+      if (!Number.isInteger(groups) || groups < 2) return "The draft started";
+      return `The draft started with ${groups} groups`;
+    }
     default:
       return "Something changed";
   }

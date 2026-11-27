@@ -3,7 +3,13 @@ import { randomUUID } from "node:crypto";
 import { withTransaction } from "@/lib/db/server";
 import { createLeague } from "@/lib/leagues/queries";
 import { insertSubmissions, recordImport } from "@/lib/pool/queries";
-import { planFor, seedPoolRows, seedQueueOrder } from "./scenarios";
+import {
+  planFor,
+  seedPoolRows,
+  seedQueueOrder,
+  totalMembers,
+} from "./scenarios";
+import { startDraft } from "@/lib/draft/start";
 import { insertSeedEvents } from "./seedEvents";
 import { insertSeedQueue } from "./seedQueue";
 import { ensureSeedUsers } from "./seedUsers";
@@ -74,8 +80,21 @@ export async function seedScenario(
         );
       }
     }
+    // Before the start: seeded events assume an empty log (seq 1 to count).
     if (plan.eventCount > 0) {
       await insertSeedEvents(tx, id, plan.eventCount, [adminId, ...others]);
+    }
+    if (plan.groupCount !== 1 || plan.pickSeconds !== 60) {
+      await tx.query(
+        `update public.leagues set group_count = $2, pick_seconds = $3 where id = $1`,
+        [id, plan.groupCount, plan.pickSeconds],
+      );
+    }
+    if (plan.startDraft) {
+      await startDraft(tx, id, adminId, {
+        members: totalMembers(plan),
+        groupCount: plan.groupCount,
+      });
     }
     return id;
   });

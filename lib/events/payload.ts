@@ -52,3 +52,20 @@ export const poolChanged = (
   type: "pool_changed",
   payload: { kind, count: Math.max(0, Math.trunc(count)) },
 });
+
+export const draftSettingsChanged = (
+  groupCount: number,
+  pickSeconds: number,
+): EventDraft => ({
+  type: "draft_settings_changed",
+  payload: { groupCount, pickSeconds },
+});
+
+/** `sizes` is each group's player count, group 1 first. */
+export const draftStarted = (
+  groupCount: number,
+  sizes: readonly number[],
+): EventDraft => ({
+  type: "draft_started",
+  payload: { groupCount, sizes: [...sizes] },
+});

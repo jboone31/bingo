@@ -63,7 +63,8 @@ change it later.
 
 ## Open Product Questions
 
-- Does the draft date do anything beyond being displayed?
+- None right now. (Settled in F6: the draft date is display only and does not gate
+  the start.)
 
 ---
 

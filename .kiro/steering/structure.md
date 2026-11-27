@@ -46,7 +46,8 @@ All API routes use the Node.js runtime and are built on `lib/api`. Pages sit und
 
 - **Leagues**: `app/api/leagues/` (create, join), `[leagueId]/` (draft date, delete),
   `[leagueId]/leave`, `[leagueId]/members/[userId]` (remove), `[leagueId]/join-code`,
-  `[leagueId]/transfer`. Pages: `leagues/new`, `leagues/join`, `join/[code]`,
+  `[leagueId]/transfer`, `[leagueId]/draft-settings` (group count, pick timer),
+  `[leagueId]/start`. Pages: `leagues/new`, `leagues/join`, `join/[code]`,
   `leagues/[leagueId]` (layout, overview, `settings`).
 - **Pool**: `app/api/leagues/[leagueId]/submissions/` (add, clear), `.../import` (CSV,
   with a dry run), `.../[submissionId]` (edit, delete). Page: `leagues/[leagueId]/pool`,
@@ -103,6 +104,10 @@ property-tested in isolation. Current modules:
   (subscribe, then catch up, coalesced). Server: `append.ts` (`appendLeagueEvent`) and
   `read.ts` (recent events through RLS).
 - `time/`: `clockOffset.ts`, the round-trip-midpoint server clock estimate (pure).
+- `draft/`: draft settings and the start. Pure: `settings.ts` (ranges, parsing,
+  `formatSeconds`), `gate.ts` (`requiredPool`, `groupSizes`, `startGate`), `split.ts`
+  (balanced random groups), `rules.ts`. Server: `queries.ts`, `start.ts`
+  (`startDraft`, shared by the route and dev seeding) and `read.ts` (groups, RLS).
 
 New domain areas (draft, board) get their own folder here.
 
@@ -117,6 +122,8 @@ Shared React components.
 - `pool/`: pool screens' components (list, filter bar, add form, CSV import, row
   actions).
 - `queue/`: the queue list (drag and drop) and the add-to-queue button.
+- `draft/`: the settings page's `DraftSetupPanel` (fields, live gate, Start with its
+  confirmation), the overview's `GateSummary` and `DraftGroups`.
 - `realtime/`: the Supabase event source, `useLeagueEvents`, and
   `ServerClockProvider` (`useServerNow`), mounted in the signed-in layout.
 - `leagues/`: league screens' components (cards, forms, member list, invite panel,
@@ -133,7 +140,7 @@ Factories for the Supabase client in each runtime: `client.ts` (browser),
 ### `supabase/migrations/`
 
 Numbered SQL files (`NNNN_name.sql`), each wrapped in its own `begin; ... commit;`.
-Applied in order by `npm run db:migrate`. All nine below are applied to the live project.
+Applied in order by `npm run db:migrate`. All ten below are applied to the live project.
 
 | File | Adds |
 | --- | --- |
@@ -146,6 +153,7 @@ Applied in order by `npm run db:migrate`. All nine below are applied to the live
 | `0007_queue` | `queue_items` (owner-only), its guard, `pool_categories` view |
 | `0008_league_events` | `league_events`, `leagues.last_event_seq`, `append_league_event`, Realtime publication |
 | `0009_league_events_actor_null` | lets `on delete set null` clear `actor_id` past the immutability trigger |
+| `0010_draft_setup` | `leagues.group_count`, `pick_seconds`, `draft_started_at`, settings guard, `draft_groups`, `draft_group_members` |
 
 ### `scripts/`
 

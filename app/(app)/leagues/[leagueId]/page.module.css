@@ -3,6 +3,10 @@
   gap: var(--space-4);
 }
 
+.wide {
+  margin-bottom: var(--space-4);
+}
+
 .side {
   display: flex;
   flex-direction: column;

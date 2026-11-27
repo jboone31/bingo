@@ -12,9 +12,18 @@ export interface LeagueRow {
   readonly status: LeagueStatus;
   readonly draftAt: string | null;
   readonly joinCode: string;
+  readonly groupCount: number;
+  readonly pickSeconds: number;
+  readonly draftStartedAt: string | null;
 }
 
-const LEAGUE_COLUMNS = "id, name, status, draft_at, join_code";
+const LEAGUE_COLUMNS =
+  "id, name, status, draft_at, join_code, group_count, pick_seconds, draft_started_at";
+
+const isoOrNull = (value: unknown): string | null =>
+  value === null || value === undefined
+    ? null
+    : new Date(value as string | Date).toISOString();
 
 function toLeague(row: Record<string, unknown>): LeagueRow {
   const draftAt = row.draft_at;
@@ -27,6 +36,9 @@ function toLeague(row: Record<string, unknown>): LeagueRow {
         ? null
         : new Date(draftAt as string | Date).toISOString(),
     joinCode: String(row.join_code),
+    groupCount: Number(row.group_count),
+    pickSeconds: Number(row.pick_seconds),
+    draftStartedAt: isoOrNull(row.draft_started_at),
   };
 }
 

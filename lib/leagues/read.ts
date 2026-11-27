@@ -26,6 +26,9 @@ export interface LeagueDetail {
   readonly status: LeagueStatus;
   readonly draftAt: string | null;
   readonly joinCode: string;
+  readonly groupCount: number;
+  readonly pickSeconds: number;
+  readonly draftStartedAt: string | null;
 }
 
 export interface MemberInfo {
@@ -65,7 +68,9 @@ export const getLeague = cache(
     const supabase = await client();
     const { data } = await supabase
       .from("leagues")
-      .select("id, name, status, draft_at, join_code")
+      .select(
+        "id, name, status, draft_at, join_code, group_count, pick_seconds, draft_started_at",
+      )
       .eq("id", id)
       .maybeSingle();
     if (!data) return null;
@@ -75,6 +80,9 @@ export const getLeague = cache(
       status: data.status as LeagueStatus,
       draftAt: data.draft_at,
       joinCode: data.join_code,
+      groupCount: data.group_count ?? 1,
+      pickSeconds: data.pick_seconds ?? 60,
+      draftStartedAt: data.draft_started_at ?? null,
     };
   },
 );

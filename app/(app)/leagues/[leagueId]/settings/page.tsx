@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { DraftSetupPanel } from "@/components/draft/DraftSetupPanel";
 import { ConfirmAction } from "@/components/leagues/ConfirmAction";
 import { DraftDateForm } from "@/components/leagues/DraftDateForm";
 import { DeleteLeagueDialog } from "@/components/leagues/DeleteLeagueDialog";
@@ -8,6 +9,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
 import { getSessionUser } from "@/lib/auth/session";
 import { getLeague, listMembers } from "@/lib/leagues/read";
+import { countPool } from "@/lib/pool/read";
 import styles from "./page.module.css";
 
 export const dynamic = "force-dynamic";
@@ -30,11 +32,23 @@ export default async function LeagueSettingsPage({
     notFound();
   }
   const preDraft = league.status === "pre_draft";
+  const pool = preDraft ? await countPool(leagueId) : 0;
 
   return (
     <>
       <PageHeader title="Settings" subtitle={league.name} />
       <div className={styles.stack}>
+        {preDraft ? (
+          <Panel title="Draft setup">
+            <DraftSetupPanel
+              leagueId={leagueId}
+              members={members.length}
+              pool={pool}
+              groupCount={league.groupCount}
+              pickSeconds={league.pickSeconds}
+            />
+          </Panel>
+        ) : null}
         {preDraft ? (
           <Panel title="Draft date">
             <DraftDateForm

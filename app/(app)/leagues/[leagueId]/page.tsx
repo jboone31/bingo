@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DraftGroups } from "@/components/draft/DraftGroups";
+import { GateSummary } from "@/components/draft/GateSummary";
 import { ActivityFeed } from "@/components/leagues/ActivityFeed";
 import { MemberList } from "@/components/leagues/MemberList";
 import { ConfirmAction } from "@/components/leagues/ConfirmAction";
@@ -10,6 +12,7 @@ import { Badge } from "@/components/ui/Badge";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
 import { getSessionUser } from "@/lib/auth/session";
+import { getDraftGroups } from "@/lib/draft/read";
 import { getRecentEvents } from "@/lib/events/read";
 import { RECENT_EVENTS } from "@/lib/events/types";
 import { getLeague, listMembers } from "@/lib/leagues/read";
@@ -36,10 +39,11 @@ export default async function LeagueOverviewPage({
     notFound();
   }
   const preDraft = league.status === "pre_draft";
-  const [poolSize, queueSize, recentEvents] = await Promise.all([
+  const [poolSize, queueSize, recentEvents, groups] = await Promise.all([
     countPool(leagueId),
     countQueue(leagueId, user.id),
     getRecentEvents(leagueId, RECENT_EVENTS),
+    preDraft ? Promise.resolve([]) : getDraftGroups(leagueId),
   ]);
 
   return (
@@ -53,6 +57,13 @@ export default async function LeagueOverviewPage({
           </Badge>
         }
       />
+      {preDraft ? null : (
+        <div className={styles.wide}>
+          <Panel title="Draft groups">
+            <DraftGroups groups={groups} viewerId={user.id} />
+          </Panel>
+        </div>
+      )}
       <div className={styles.grid}>
         <Panel title="Players">
           <MemberList
@@ -72,6 +83,14 @@ export default async function LeagueOverviewPage({
                 "Date to be set"
               )}
             </p>
+            {preDraft ? (
+              <GateSummary
+                members={members.length}
+                groups={league.groupCount}
+                pickSeconds={league.pickSeconds}
+                pool={poolSize}
+              />
+            ) : null}
           </Panel>
           <Panel title="Pool">
             <p className={styles.date}>

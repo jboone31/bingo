@@ -37,7 +37,7 @@ written and features ship.
 | F3  | Pool administration             | F2             | Done        |
 | F4  | Pre-draft pool and queue        | F2, F3         | Done        |
 | F5  | Realtime and event log          | F2             | Done        |
-| F6  | Draft setup and start           | F3, F4         | Spec written |
+| F6  | Draft setup and start           | F3, F4         | Done        |
 | F7  | Draft engine and timers         | F5, F6         | Not started |
 | F8  | Draft room UI                   | F7             | Not started |
 | F9  | Live feed and big screen        | F7             | Not started |
@@ -46,10 +46,12 @@ written and features ship.
 
 ## Status And Handoff
 
-Built and committed: **F0 to F5**. Nothing is half done. The working tree is clean.
+Built and committed: **F0 to F6**. Nothing is half done. The working tree is clean.
 
-**Next: F6 (Draft setup and start).** Its spec does not exist yet. Settle its open
-questions with the user first (see the F6 section).
+**Next: F7 (Draft engine and timers).** Its spec does not exist yet. Settle its open
+questions with the user first (see the F7 section, including the notes from F5 and F6).
+
+F6 manual checks (`draft-setup` 6.3 to 6.6) have not been confirmed by the user.
 
 F5 manual checks (`realtime-events` 6.3 to 6.6: Activity list, two-tab live updates,
 offline catch-up, 360px) have not been confirmed by the user.
@@ -77,8 +79,7 @@ but has not confirmed these):
   asked whether to show them as typed; no answer yet.
 - Optional, not built: "Move to top" or "move to position" for long queues.
 - Decided to skip for now: attempt limits on join codes.
-- Still open product questions: whether the draft date does anything beyond display;
-  F8 banner scope; F11 who can download the CSV; PNG export in browser or on the server.
+- Still open product questions: F8 banner scope; F11 who can download the CSV; PNG export in browser or on the server.
 
 **Building blocks to reuse, not rebuild:** `lib/api` (`handle`, `handlePublic`,
 `readJsonObject`, `parseUuid`, `ok`/`fail`); `lib/leagues/guard.ts` (`assertAllowed`,
@@ -233,6 +234,12 @@ From earlier features:
   absence of a pick in that group.
 - A league with fewer members than groups cannot start.
 
+Decided: 1 to 10 groups (default 1); pick timer 10 to 900 seconds (default 60); a
+Draft setup panel on the settings page; a confirm dialog with a summary, no typed name;
+the draft date does not gate the start; the start carries the confirmed player and
+group counts and is refused if they changed; a repeated start succeeds as "already
+started". See `.kiro/specs/draft-setup/`.
+
 From earlier features:
 - The start must lock the league row `for update`. Pool writes lock it the same way,
   and queue writes hold it `for share`, so the start cannot interleave with either.
@@ -262,6 +269,16 @@ From earlier features:
   without waiting.
 
 From earlier features:
+- F6 built the start (`lib/draft/start.ts`). After it: `leagues.status = drafting`,
+  `draft_started_at` (database time), `pick_seconds`, `group_count`; `draft_groups`
+  (number 1 to G) and `draft_group_members` (group, user, `position` 1 to size, the
+  round-1 order). No turns or deadlines exist yet: derive turn 1 from
+  `draft_started_at`. Leagues started before F7 ships (seed and test only) have no
+  clock; decide whether F7 backfills them or they are reset.
+- Group rows cannot be edited (trigger). A member row disappears only if the user
+  account is deleted (cascade through `league_members`); the engine must tolerate a
+  missing player mid-draft or block account deletion.
+- `draft_started` seed scenario: 15 players in 3 groups with queues, started.
 - F5 built the event log (`lib/events/`, `league_events`). Draft events can use the
   same table and `appendLeagueEvent`, or a group-scoped table with its own policy; both
   keep the per-scope gap-free `seq`. In F5 the client does **not** derive state from
@@ -317,7 +334,7 @@ From earlier features:
   then, so nobody can draft around it.
 - Boards are stored so they do not change after generation.
 
-Decided: the mapping is per league and stays hidden until boards are generated.
+\1 and stays hidden until boards are generated.
 
 ## F11: Board view and export
 
