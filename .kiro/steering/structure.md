@@ -54,7 +54,9 @@ All API routes use the Node.js runtime and are built on `lib/api`. Pages sit und
   which reads `?cat=&q=&sort=&page=` (`cat` is `c:<name>` or `none`).
 - **Queue**: `app/api/leagues/[leagueId]/queue/` (add, reorder) and
   `.../queue/[submissionId]` (remove). Page: `leagues/[leagueId]/queue`.
-- **Dev**: `app/api/dev/` (`seed`, `reset`, `act-as`, `sign-in`) and the `dev` page.
+- **Dev**: `app/api/dev/` (`seed`, `reset` with scope `mine`, `league` or `all`,
+  `act-as`, `sign-in`) and the `dev` page, which lists your seed leagues with a Delete
+  button each (any status; only leagues with a `seed_scenario` tag you belong to).
   All return 404 unless dev tools are enabled. `sign-in` works without a session and
   also requires a local or private-network host; the sign-in page shows it as
   "Dev sign-in".

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -31,10 +31,26 @@ const users = [
   { id: "u2", displayName: "Seed Player 002" },
 ];
 
-const setup = (seedUsers = users) =>
+const leagues = [
+  {
+    id: "L1",
+    name: "[Seed] Draft started",
+    scenario: "draft_started",
+    status: "drafting",
+    createdAt: "2026-03-01T19:00:00.000Z",
+  },
+  {
+    id: "L2",
+    name: "[Seed] Empty league",
+    scenario: "league_empty",
+    status: "pre_draft",
+    createdAt: "2026-03-01T18:00:00.000Z",
+  },
+];
+const setup = (seedUsers = users, seedLeagues = leagues) =>
   render(
     <ToastProvider>
-      <DevTools seedUsers={seedUsers} />
+      <DevTools seedUsers={seedUsers} seedLeagues={seedLeagues} />
     </ToastProvider>,
   );
 
@@ -179,5 +195,45 @@ describe("DevSignIn", () => {
       await screen.findByText("Could not sign in as that player."),
     ).toBeInTheDocument();
     expect(push).not.toHaveBeenCalled();
+  });
+});
+
+describe("DevTools seed leagues", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("lists your seed leagues with their scenario and status", () => {
+    setup();
+    expect(
+      screen.getByRole("link", { name: "[Seed] Draft started" }),
+    ).toHaveAttribute("href", "/leagues/L1");
+    expect(screen.getByText("Drafting")).toBeInTheDocument();
+    expect(screen.getByText(/^Draft started ·/)).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Delete" })).toHaveLength(2);
+  });
+
+  it("deletes one league, in any status, after confirming", async () => {
+    const fetchMock = reply(200, { ok: true, leagues: 1, users: 0 });
+    vi.stubGlobal("fetch", fetchMock);
+    setup();
+    await userEvent.click(screen.getAllByRole("button", { name: "Delete" })[0]);
+    await userEvent.click(
+      within(
+        screen.getByRole("dialog", { name: "Delete [Seed] Draft started?" }),
+      ).getByRole("button", { name: "Delete" }),
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/dev/reset",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      scope: "league",
+      leagueId: "L1",
+    });
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("says so when you are in no seed leagues", () => {
+    setup(users, []);
+    expect(screen.getByText("You are in no seed leagues.")).toBeInTheDocument();
   });
 });

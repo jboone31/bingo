@@ -1,6 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/dev/seedUsers", () => ({ listSeedUsers: async () => [] }));
+vi.mock("@/lib/auth/session", () => ({
+  getSessionUser: async () => ({ id: "u1", email: null }),
+}));
+vi.mock("@/lib/db/server", () => ({
+  withTransaction: (fn: (tx: unknown) => unknown) => fn({}),
+}));
+vi.mock("@/lib/dev/reset", () => ({ listMySeedLeagues: async () => [] }));
 
 import DevPage from "./page";
 

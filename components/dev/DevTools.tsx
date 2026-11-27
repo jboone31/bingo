@@ -9,12 +9,24 @@ import { Dialog } from "@/components/ui/Dialog";
 import { Panel } from "@/components/ui/Panel";
 import { Select } from "@/components/ui/Select";
 import { useToast } from "@/components/ui/Toast";
+import { LocalTime } from "@/components/LocalTime";
+import { STATUS_LABEL, STATUS_TONE } from "@/components/leagues/status";
+import { Badge } from "@/components/ui/Badge";
+import type { LeagueStatus } from "@/lib/leagues/types";
 import { SCENARIOS } from "@/lib/dev/scenarios";
 import styles from "./DevTools.module.css";
 
 export interface SeedUserOption {
   readonly id: string;
   readonly displayName: string;
+}
+
+export interface SeedLeagueOption {
+  readonly id: string;
+  readonly name: string;
+  readonly scenario: string;
+  readonly status: string;
+  readonly createdAt: string;
 }
 
 interface Created {
@@ -35,8 +47,10 @@ async function post(url: string, body: unknown) {
 /** Dev hub: run scenarios, reset seed data, and act as a seed player. */
 export function DevTools({
   seedUsers,
+  seedLeagues = [],
 }: {
   seedUsers: readonly SeedUserOption[];
+  seedLeagues?: readonly SeedLeagueOption[];
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -128,6 +142,50 @@ export function DevTools({
         ) : null}
       </Panel>
 
+      <Panel title="My seed leagues">
+        {seedLeagues.length === 0 ? (
+          <p className={styles.muted}>You are in no seed leagues.</p>
+        ) : (
+          <ul className={styles.list}>
+            {seedLeagues.map((league) => (
+              <li key={league.id} className={styles.item}>
+                <div className={styles.text}>
+                  <Link href={`/leagues/${league.id}`}>{league.name}</Link>
+                  <span className={styles.muted}>
+                    {SCENARIOS[league.scenario]?.label ?? league.scenario} ·
+                    created <LocalTime iso={league.createdAt} />
+                  </span>
+                </div>
+                <Badge
+                  tone={STATUS_TONE[league.status as LeagueStatus] ?? "neutral"}
+                >
+                  {STATUS_LABEL[league.status as LeagueStatus] ?? league.status}
+                </Badge>
+                <ConfirmAction
+                  label="Delete"
+                  variant="danger"
+                  size="sm"
+                  title={`Delete ${league.name}?`}
+                  confirmLabel="Delete"
+                  request={{
+                    url: "/api/dev/reset",
+                    method: "POST",
+                    body: { scope: "league", leagueId: league.id },
+                  }}
+                  after={{ kind: "refresh" }}
+                  refreshOnError
+                  successMessage="Seed league deleted."
+                >
+                  <p>
+                    This deletes this seed league and everything in it, in any
+                    status. Other leagues are not touched.
+                  </p>
+                </ConfirmAction>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Panel>
       <Panel title="Reset">
         <div className={styles.row}>
           <Button

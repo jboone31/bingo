@@ -9,6 +9,7 @@ const m = vi.hoisted(() => ({
   seedScenario: vi.fn(),
   resetMine: vi.fn(),
   resetAll: vi.fn(),
+  resetOne: vi.fn(),
   actAs: vi.fn(),
 }));
 vi.mock("@/lib/auth/session", () => ({ getSessionUser: m.getSessionUser }));
@@ -18,6 +19,7 @@ vi.mock("@/lib/dev/seedScenario", () => ({ seedScenario: m.seedScenario }));
 vi.mock("@/lib/dev/reset", () => ({
   resetMine: m.resetMine,
   resetAll: m.resetAll,
+  resetOne: m.resetOne,
 }));
 vi.mock("@/lib/dev/actAs", () => ({ actAs: m.actAs }));
 
@@ -76,6 +78,7 @@ describe.each(routes)("POST /api/dev/%s", (_name, post, body) => {
     m.seedScenario.mockRejectedValue(new Error("service key leaked"));
     m.withTransaction.mockRejectedValue(new Error("service key leaked"));
     m.resetAll.mockRejectedValue(new Error("service key leaked"));
+    m.resetOne.mockRejectedValue(new Error("service key leaked"));
     m.actAs.mockRejectedValue(new Error("service key leaked"));
     const res = await post(req(body), ctx);
     expect(res.status).toBe(500);
@@ -113,6 +116,42 @@ describe("reset", () => {
     expect(await res.json()).toEqual({ ok: true, leagues: 2, users: 0 });
     expect(m.resetMine).toHaveBeenCalledWith({}, USER);
     expect(m.resetAll).not.toHaveBeenCalled();
+  });
+
+  it("deletes one of the caller's seed leagues for scope league", async () => {
+    m.resetOne.mockResolvedValue(true);
+    const LEAGUE = "11111111-1111-4111-8111-111111111111";
+    const res = await resetPost(
+      req({ scope: "league", leagueId: LEAGUE }),
+      ctx,
+    );
+    expect(await res.json()).toEqual({ ok: true, leagues: 1, users: 0 });
+    expect(m.resetOne).toHaveBeenCalledWith({}, USER, LEAGUE);
+    expect(m.resetMine).not.toHaveBeenCalled();
+    expect(m.resetAll).not.toHaveBeenCalled();
+  });
+
+  it("is 404 when that league is not one of the caller's seed leagues", async () => {
+    m.resetOne.mockResolvedValue(false);
+    const res = await resetPost(
+      req({
+        scope: "league",
+        leagueId: "11111111-1111-4111-8111-111111111111",
+      }),
+      ctx,
+    );
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ ok: false, reason: "league_not_found" });
+  });
+
+  it.each([
+    ["a missing league id", { scope: "league" }],
+    ["a bad league id", { scope: "league", leagueId: "nope" }],
+    ["a league id with another scope", { scope: "mine", leagueId: "x" }],
+  ])("is 400 for %s", async (_label, body) => {
+    expect((await resetPost(req(body), ctx)).status).toBe(400);
+    expect(m.resetOne).not.toHaveBeenCalled();
+    expect(m.resetMine).not.toHaveBeenCalled();
   });
 
   it("resets all seed data for scope all", async () => {
