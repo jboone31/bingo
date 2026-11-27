@@ -66,7 +66,28 @@ describe("scenarios", () => {
     expect(rows.length - new Set(rows.map((r) => r.text)).size).toBe(3);
     expect(rows.some((r) => r.submitter === "")).toBe(true);
     expect(rows.some((r) => r.category === "")).toBe(true);
-    expect(new Set(rows.map((r) => r.category).filter(Boolean)).size).toBe(5);
+  });
+
+  it("draws from the given squares in order and starts over with a pass number", () => {
+    const demo = [
+      { text: "A", submitter: "Sam", category: "X" },
+      { text: "B", submitter: "Ada", category: "Y" },
+    ];
+    expect(seedPoolRows(5, demo).map((r) => r.text)).toEqual([
+      "A",
+      "B",
+      "A (2)",
+      "B (2)",
+      "A (3)",
+    ]);
+    expect(seedPoolRows(1, demo)[0]).toEqual(demo[0]);
+  });
+
+  it("keeps long text within the limit when it adds a pass number", () => {
+    const long = [{ text: "x".repeat(200), submitter: "", category: "" }];
+    for (const row of seedPoolRows(30, long)) {
+      expect(parseText(row.text).ok).toBe(true);
+    }
   });
 
   it("generated rows always satisfy the pool field rules", () => {

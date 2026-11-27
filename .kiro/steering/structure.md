@@ -94,7 +94,10 @@ property-tested in isolation. Current modules:
 - `api/`: route helpers (`handle`, `readJsonObject`, `parseUuid`, `ok`/`fail`,
   `ApiError`). Server-only.
 - `dev/`: dev-only tools: gate, seed identity, scenario registry, seeding, reset and
-  act-as. Server parts are server-only.
+  act-as. Server parts are server-only. Seed pools use `demo_squares.csv` (real
+  squares from earlier years, columns `Text,Submitter,Category`), read by
+  `demoSquares.ts` through the pool's CSV import; `next.config.ts` traces it into the
+  seed route.
 - `pool/`: pool rules and validation (pure: fields, CSV parse and import, paging,
   filter/sort/search parsing in `query.ts`), SQL (`queries.ts`) and RLS reads
   (`read.ts`).

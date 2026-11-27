@@ -118,7 +118,7 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
   league_with_pool: {
     label: "League with a pool",
     description:
-      "Pre-draft. You are the admin with 11 players and 60 squares in 5 categories, 3 exact duplicates.",
+      "Pre-draft. You are the admin with 11 players and 60 demo squares, 3 exact duplicates.",
     plan: {
       leagueName: "[Seed] League with a pool",
       viewerRole: "admin",
@@ -381,21 +381,45 @@ export interface SeedSubmission {
   readonly category: string;
 }
 
+/** Longest square text the pool accepts (`lib/pool/fields.ts`). */
+const TEXT_MAX = 200;
+
+/** Used only when no demo squares are given (tests, or a missing file). */
+const FALLBACK: readonly SeedSubmission[] = SEED_SUBMITTERS.map(
+  (submitter, i) => ({
+    text: `Seed square ${i + 1}`,
+    submitter,
+    category: SEED_CATEGORIES[i % SEED_CATEGORIES.length],
+  }),
+);
+
 /**
- * Deterministic pool rows for a scenario. Every 20th row repeats the previous row's
- * text, so duplicates exist to test with. Every 11th submitter and 13th category is
- * blank, to exercise the fallbacks.
+ * Deterministic pool rows for a scenario, drawn from `demo` (the demo squares) in
+ * order. When the pool is bigger than the list, it starts over with " (2)", " (3)"
+ * and so on, so every square still reads as distinct. Every 20th row repeats the
+ * previous row exactly, so duplicates exist to test with. Every 11th submitter and
+ * 13th category is blank, to exercise the fallbacks.
  */
-export function seedPoolRows(count: number): SeedSubmission[] {
+export function seedPoolRows(
+  count: number,
+  demo: readonly SeedSubmission[] = FALLBACK,
+): SeedSubmission[] {
+  const base = demo.length > 0 ? demo : FALLBACK;
   const rows: SeedSubmission[] = [];
-  let unique = 0;
+  let unique = -1;
   for (let i = 1; i <= count; i += 1) {
-    if (i % 20 !== 0) unique += 1;
+    if (i % 20 !== 0 || unique < 0) unique += 1;
+    const source = base[unique % base.length];
+    const pass = Math.floor(unique / base.length) + 1;
+    const suffix = pass > 1 ? ` (${pass})` : "";
+    const text =
+      Array.from(source.text)
+        .slice(0, TEXT_MAX - suffix.length)
+        .join("") + suffix;
     rows.push({
-      text: `Seed square ${String(unique).padStart(3, "0")}`,
-      submitter:
-        i % 11 === 0 ? "" : SEED_SUBMITTERS[i % SEED_SUBMITTERS.length],
-      category: i % 13 === 0 ? "" : SEED_CATEGORIES[i % SEED_CATEGORIES.length],
+      text,
+      submitter: i % 11 === 0 ? "" : source.submitter,
+      category: i % 13 === 0 ? "" : source.category,
     });
   }
   return rows;

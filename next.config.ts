@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
   // blocks its hot-reload socket from any host but localhost. Patterns match one dot
   // segment per `*`, so these cover the common private ranges.
   allowedDevOrigins: ["192.168.*.*", "10.*.*.*", "172.*.*.*", "*.local"],
+  // Dev seeding reads the demo squares from disk; include the file in that route's
+  // deployment bundle (dev tools may run on a Preview deployment).
+  outputFileTracingIncludes: {
+    "/api/dev/seed": ["./lib/dev/demo_squares.csv"],
+  },
 };
 
 export default nextConfig;

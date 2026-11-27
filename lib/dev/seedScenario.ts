@@ -11,6 +11,7 @@ import {
 } from "./scenarios";
 import { devAdvance } from "@/lib/draft/engine.server";
 import { startDraft } from "@/lib/draft/start";
+import { demoSquares } from "./demoSquares";
 import { insertSeedEvents } from "./seedEvents";
 import { insertSeedQueue } from "./seedQueue";
 import { ensureSeedUsers } from "./seedUsers";
@@ -54,7 +55,7 @@ export async function seedScenario(
       );
     }
     if (plan.poolSubmissions > 0) {
-      const rows = seedPoolRows(plan.poolSubmissions);
+      const rows = seedPoolRows(plan.poolSubmissions, demoSquares());
       const record = await recordImport(tx, id, randomUUID(), rows.length);
       const submissionIds = await insertSubmissions(
         tx,
