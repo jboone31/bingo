@@ -2,6 +2,8 @@ import { handle } from "@/lib/api/handler";
 import { parseUuid } from "@/lib/api/ids";
 import { ok } from "@/lib/api/response";
 import { withTransaction } from "@/lib/db/server";
+import { appendLeagueEvent, displayNameOf } from "@/lib/events/append";
+import { memberRemoved } from "@/lib/events/payload";
 import { assertAllowed, lockLeagueForMember } from "@/lib/leagues/guard";
 import { deleteMember, getMemberRole } from "@/lib/leagues/queries";
 import { canRemove } from "@/lib/leagues/rules";
@@ -34,7 +36,15 @@ export const DELETE = handle<
       );
       const target = await getMemberRole(tx, input.leagueId, input.targetId);
       if (target !== null) {
-        await deleteMember(tx, input.leagueId, input.targetId);
+        const name = await displayNameOf(tx, input.targetId);
+        if (await deleteMember(tx, input.leagueId, input.targetId)) {
+          await appendLeagueEvent(
+            tx,
+            input.leagueId,
+            user.id,
+            memberRemoved(name),
+          );
+        }
       }
       return ok();
     }),

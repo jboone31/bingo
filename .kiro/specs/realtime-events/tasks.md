@@ -1,37 +1,39 @@
 # F5: Realtime And Event Log. Tasks
-- [ ] 1. Database
-  - [ ] 1.1 `supabase/migrations/0008_league_events.sql`: `leagues.last_event_seq`,
+- [x] 1. Database
+  - [x] 1.1 `supabase/migrations/0008_league_events.sql`: `leagues.last_event_seq`,
         `league_events`, RLS, grants, immutability trigger, `append_league_event`,
         Realtime publication. Dry run, then `npm run db:migrate`. _R1, R2_
-  - [ ] 1.2 `test/integration/leagueEvents.integration.test.ts` (see design). _R1, R2_
-- [ ] 2. Pure logic
-  - [ ] 2.1 `lib/events/types.ts`, `payload.ts`, `describe.ts` with tests. _R1, R5_
-  - [ ] 2.2 `lib/events/fold.ts` and `catchUp.ts` with example and fast-check tests.
+        Follow-up `0009_league_events_actor_null.sql`: the trigger blocked the
+        `on delete set null` of `actor_id`, found by the integration test.
+  - [x] 1.2 `test/integration/leagueEvents.integration.test.ts` (see design). _R1, R2_
+- [x] 2. Pure logic
+  - [x] 2.1 `lib/events/types.ts`, `payload.ts`, `describe.ts` with tests. _R1, R5_
+  - [x] 2.2 `lib/events/fold.ts` and `catchUp.ts` with example and fast-check tests.
         _R3_
-  - [ ] 2.3 `lib/time/clockOffset.ts` with tests. _R4_
-- [ ] 3. Server code and routes
-  - [ ] 3.1 `lib/events/append.ts` and `read.ts`. _R1, R5_
-  - [ ] 3.2 Expose "changed" from query functions where needed (join, leave, remove,
+  - [x] 2.3 `lib/time/clockOffset.ts` with tests. _R4_
+- [x] 3. Server code and routes
+  - [x] 3.1 `lib/events/append.ts` and `read.ts`. _R1, R5_
+  - [x] 3.2 Expose "changed" from query functions where needed (join, leave, remove,
         transfer, draft date, submissions add, edit, delete, clear, import), updating
         their tests. _R1.3_
-  - [ ] 3.3 Append events in the eleven mutation points, with route tests for event
+  - [x] 3.3 Append events in the eleven mutation points, with route tests for event
         and no-event cases. _R1_
-  - [ ] 3.4 `GET /api/time` with a route test. _R4_
-- [ ] 4. Client
-  - [ ] 4.1 `components/realtime/useLeagueEvents.ts` with component tests (mocked
+  - [x] 3.4 `GET /api/time` with a route test. _R4_
+- [x] 4. Client
+  - [x] 4.1 `components/realtime/useLeagueEvents.ts` with component tests (mocked
         client). _R3_
-  - [ ] 4.2 `components/realtime/ServerClockProvider.tsx`, mounted in the signed-in
+  - [x] 4.2 `components/realtime/ServerClockProvider.tsx`, mounted in the signed-in
         layout, with a test. _R4_
-  - [ ] 4.3 `components/leagues/ActivityFeed.tsx` and the overview page wiring, with
+  - [x] 4.3 `components/leagues/ActivityFeed.tsx` and the overview page wiring, with
         tests. _R5_
-- [ ] 5. Dev tooling
-  - [ ] 5.1 `eventCount` in `ScenarioPlan`, `league_with_activity`, seeding in
+- [x] 5. Dev tooling
+  - [x] 5.1 `eventCount` in `ScenarioPlan`, `league_with_activity`, seeding in
         `seedScenario`, scenario tests. _R6_
 - [ ] 6. Steering and verification
-  - [ ] 6.1 Add an Events rule to `conventions.md` (every league mutation appends an
+  - [x] 6.1 Add an Events rule to `conventions.md` (every league mutation appends an
         event in its transaction), update `structure.md` (`lib/events/`, `lib/time/`,
         `components/realtime/`, migration 0008, `/api/time`) and `roadmap.md`.
-  - [ ] 6.2 `npm run typecheck`, `lint`, `format:check`, `test`, `build`, and
+  - [x] 6.2 `npm run typecheck`, `lint`, `format:check`, `test`, `build`, and
         `npm run test:integration -- leagueEvents`.
   - [ ] 6.3 Manual (user): open the `league_with_activity` overview and confirm 50
         events newest first. _R5, R6_

@@ -5,17 +5,20 @@ import {
   USER_ID,
   jsonRequest,
   league,
+  mockEvents,
   mockQueries,
 } from "@/test/helpers/leagueRoutes";
 
-const { getSessionUser, withTransaction, q } = vi.hoisted(() => ({
+const { getSessionUser, withTransaction, q, ev } = vi.hoisted(() => ({
   getSessionUser: vi.fn(),
   withTransaction: vi.fn(),
   q: {} as Record<string, ReturnType<typeof vi.fn>>,
+  ev: {} as Record<string, ReturnType<typeof vi.fn>>,
 }));
 vi.mock("@/lib/auth/session", () => ({ getSessionUser }));
 vi.mock("@/lib/db/server", () => ({ withTransaction }));
 vi.mock("@/lib/leagues/queries", () => q);
+vi.mock("@/lib/events/append", () => ev);
 
 import { POST } from "./route";
 
@@ -27,6 +30,7 @@ const call = (body: unknown = { userId: OTHER_ID }) =>
 describe("POST /api/leagues/[leagueId]/transfer", () => {
   beforeEach(() => {
     Object.assign(q, mockQueries());
+    Object.assign(ev, mockEvents());
     getSessionUser.mockReset().mockResolvedValue({ id: USER_ID, email: null });
     withTransaction
       .mockReset()
@@ -88,5 +92,25 @@ describe("POST /api/leagues/[leagueId]/transfer", () => {
       ok: true,
     });
     expect(q.setRole).not.toHaveBeenCalled();
+  });
+
+  it("appends admin_transferred with both names", async () => {
+    ev.displayNameOf.mockResolvedValueOnce("Alex").mockResolvedValueOnce("Sam");
+    await call();
+    expect(ev.appendLeagueEvent).toHaveBeenCalledTimes(1);
+    expect(ev.appendLeagueEvent).toHaveBeenCalledWith({}, LEAGUE_ID, USER_ID, {
+      type: "admin_transferred",
+      payload: { from: "Alex", to: "Sam" },
+    });
+  });
+  it("appends nothing when the target is already admin or the call is refused", async () => {
+    q.getMemberRole
+      .mockReset()
+      .mockResolvedValueOnce("admin")
+      .mockResolvedValueOnce("admin");
+    await call();
+    q.getMemberRole.mockReset().mockResolvedValue("member");
+    await call();
+    expect(ev.appendLeagueEvent).not.toHaveBeenCalled();
   });
 });

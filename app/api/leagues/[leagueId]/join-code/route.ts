@@ -2,6 +2,8 @@ import { handle } from "@/lib/api/handler";
 import { parseUuid } from "@/lib/api/ids";
 import { ok } from "@/lib/api/response";
 import { withTransaction } from "@/lib/db/server";
+import { appendLeagueEvent } from "@/lib/events/append";
+import { joinCodeRegenerated } from "@/lib/events/payload";
 import { assertAllowed, lockLeagueForMember } from "@/lib/leagues/guard";
 import { setJoinCode } from "@/lib/leagues/queries";
 import { canRegenerateCode } from "@/lib/leagues/rules";
@@ -18,6 +20,8 @@ export const POST = handle<string, { leagueId: string }>({
       assertAllowed(
         canRegenerateCode({ status: league.status, actorRole: role }),
       );
-      return ok({ joinCode: await setJoinCode(tx, leagueId) });
+      const joinCode = await setJoinCode(tx, leagueId);
+      await appendLeagueEvent(tx, leagueId, user.id, joinCodeRegenerated());
+      return ok({ joinCode });
     }),
 });

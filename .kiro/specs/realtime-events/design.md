@@ -22,7 +22,9 @@ create table public.league_events (
   (public.is_league_member(league_id))`.
 - `revoke all ... from anon, authenticated; grant select ... to authenticated`.
 - `alter publication supabase_realtime add table public.league_events`.
-- Trigger `league_events_immutable` (before update) raises `league_events_immutable`.
+- Trigger `league_events_immutable` (before update) raises `league_events_immutable`,
+  except for the one change `on delete set null` makes (actor_id to null), allowed in
+  migration 0009.
   Delete is not blocked, because the league cascade must work; no role that clients use
   can delete.
 - Function `public.append_league_event(p_league_id uuid, p_type text, p_payload jsonb,
@@ -55,7 +57,8 @@ Framework-free, with tests beside it.
   when nothing is missing and no recheck is due.
 ## Server: `lib/events/`
 - `append.ts` (server-only): `appendLeagueEvent(tx, leagueId, actorId, event)` calls
-  `select public.append_league_event($1,$2,$3::jsonb,$4)`. It takes the output of the
+  `select public.append_league_event($1,$2,$3::text::jsonb,$4)`. The `text` cast is
+  required: postgres.js stores a string bound to `$3::jsonb` as a JSON string. It takes the output of the
   payload builders. Routes call it after the change, only when something changed.
 - `read.ts` (server-only, RLS client): `getRecentEvents(supabase, leagueId, limit)`
   returns the latest `limit` events, newest first, for the overview.
@@ -92,6 +95,8 @@ or count) and its tests updated.
   nothing further. Clock readouts use `performance.now()` plus a wall-clock anchor to
   avoid clock jumps during a sample.
 ## Client Subscription
+The sequencing lives in `lib/events/feed.ts` (`EventFeed`, framework-free, tested with
+a fake source); `components/realtime/supabaseSource.ts` adapts Supabase to it.
 `components/realtime/useLeagueEvents.ts` (client hook), input `{ leagueId, initial }`
 where `initial` is the server-loaded events:
 1. Create the browser Supabase client (`utils/supabase/client.ts`).
@@ -120,8 +125,9 @@ The hook returns `{ events, connection }` where `connection` is `connecting`, `l
 ## Dev Scenario
 - `ScenarioPlan` gets `eventCount: number`. Existing entries set `0`.
 - `league_with_activity`: admin plus 11 seed players, a pool of 40, `eventCount` 60.
-  `seedScenario` appends events through `append_league_event` as the owner, cycling the
-  known types with seed member names. Reset already deletes the league, which cascades
+  `lib/dev/seedEvents.ts` inserts the rows directly with past timestamps 20 minutes
+  apart (the append function stamps "now"), seq 1 to 60, and sets `last_event_seq` to
+  match, cycling the known types with seed member names. The events are sample noise. Reset already deletes the league, which cascades
   the log.
 ## Testing Plan
 - Property tests (fast-check, 100+ runs): `foldEvents` gives the same result for any

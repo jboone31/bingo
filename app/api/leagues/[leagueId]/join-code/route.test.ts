@@ -4,17 +4,20 @@ import {
   USER_ID,
   jsonRequest,
   league,
+  mockEvents,
   mockQueries,
 } from "@/test/helpers/leagueRoutes";
 
-const { getSessionUser, withTransaction, q } = vi.hoisted(() => ({
+const { getSessionUser, withTransaction, q, ev } = vi.hoisted(() => ({
   getSessionUser: vi.fn(),
   withTransaction: vi.fn(),
   q: {} as Record<string, ReturnType<typeof vi.fn>>,
+  ev: {} as Record<string, ReturnType<typeof vi.fn>>,
 }));
 vi.mock("@/lib/auth/session", () => ({ getSessionUser }));
 vi.mock("@/lib/db/server", () => ({ withTransaction }));
 vi.mock("@/lib/leagues/queries", () => q);
+vi.mock("@/lib/events/append", () => ev);
 
 import { POST } from "./route";
 
@@ -24,6 +27,7 @@ const call = (id = LEAGUE_ID) =>
 describe("POST /api/leagues/[leagueId]/join-code", () => {
   beforeEach(() => {
     Object.assign(q, mockQueries());
+    Object.assign(ev, mockEvents());
     getSessionUser.mockReset().mockResolvedValue({ id: USER_ID, email: null });
     withTransaction
       .mockReset()
@@ -58,5 +62,19 @@ describe("POST /api/leagues/[leagueId]/join-code", () => {
   it("409 after the draft starts", async () => {
     q.lockLeagueById.mockResolvedValue(league({ status: "in_progress" }));
     expect((await call()).status).toBe(409);
+  });
+
+  it("appends join_code_regenerated without the code in the payload", async () => {
+    await call();
+    expect(ev.appendLeagueEvent).toHaveBeenCalledTimes(1);
+    expect(ev.appendLeagueEvent).toHaveBeenCalledWith({}, LEAGUE_ID, USER_ID, {
+      type: "join_code_regenerated",
+      payload: {},
+    });
+  });
+  it("appends nothing when the call is refused", async () => {
+    q.getMemberRole.mockResolvedValue("member");
+    await call();
+    expect(ev.appendLeagueEvent).not.toHaveBeenCalled();
   });
 });

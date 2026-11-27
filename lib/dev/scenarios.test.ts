@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   SCENARIOS,
   planFor,
+  seedEventDrafts,
   seedPoolRows,
   seedQueueOrder,
   totalMembers,
@@ -12,10 +13,11 @@ import {
 const names = Object.keys(SCENARIOS);
 
 describe("scenarios", () => {
-  it("has the F2, F3 and F4 scenarios", () => {
+  it("has the F2 to F5 scenarios", () => {
     expect([...names].sort()).toEqual([
       "league_empty",
       "league_full",
+      "league_with_activity",
       "league_with_players",
       "league_with_pool",
       "member_view",
@@ -139,5 +141,56 @@ describe("seedQueueOrder", () => {
   it("returns nothing for an empty pool or size", () => {
     expect(seedQueueOrder(0, 5, 1)).toEqual([]);
     expect(seedQueueOrder(10, 0, 1)).toEqual([]);
+  });
+});
+
+describe("event seeding (F5)", () => {
+  it("only league_with_activity seeds events, and more than the 50 shown", () => {
+    for (const name of names) {
+      const { eventCount } = planFor(name)!;
+      if (name === "league_with_activity") {
+        expect(eventCount).toBe(60);
+        expect(eventCount).toBeGreaterThan(50);
+      } else {
+        expect(eventCount).toBe(0);
+      }
+    }
+  });
+
+  it("builds the requested number of events, covering every type", () => {
+    const drafts = seedEventDrafts(60, ["Sam", "Riley"]);
+    expect(drafts).toHaveLength(60);
+    expect(new Set(drafts.map((d) => d.type))).toEqual(
+      new Set([
+        "member_joined",
+        "member_left",
+        "admin_transferred",
+        "draft_date_changed",
+        "join_code_regenerated",
+        "pool_changed",
+      ]),
+    );
+    expect(seedEventDrafts(0, ["Sam"])).toEqual([]);
+  });
+
+  it("is deterministic and valid for any count and names", () => {
+    expect(seedEventDrafts(25, ["A", "B", "C"])).toEqual(
+      seedEventDrafts(25, ["A", "B", "C"]),
+    );
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 0, max: 120 }),
+        fc.array(fc.string({ minLength: 1, maxLength: 20 }), { maxLength: 4 }),
+        (count, nameList) => {
+          const drafts = seedEventDrafts(count, nameList);
+          expect(drafts).toHaveLength(count);
+          for (const d of drafts) {
+            expect(d.type).toMatch(/^[a-z][a-z_]{0,39}$/);
+            expect(JSON.stringify(d.payload).length).toBeLessThan(2000);
+          }
+        },
+      ),
+      { numRuns: 100 },
+    );
   });
 });

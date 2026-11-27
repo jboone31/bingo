@@ -4,17 +4,20 @@ import {
   USER_ID,
   jsonRequest,
   league,
+  mockEvents,
   mockQueries,
 } from "@/test/helpers/leagueRoutes";
 
-const { getSessionUser, withTransaction, q } = vi.hoisted(() => ({
+const { getSessionUser, withTransaction, q, ev } = vi.hoisted(() => ({
   getSessionUser: vi.fn(),
   withTransaction: vi.fn(),
   q: {} as Record<string, ReturnType<typeof vi.fn>>,
+  ev: {} as Record<string, ReturnType<typeof vi.fn>>,
 }));
 vi.mock("@/lib/auth/session", () => ({ getSessionUser }));
 vi.mock("@/lib/db/server", () => ({ withTransaction }));
 vi.mock("@/lib/leagues/queries", () => q);
+vi.mock("@/lib/events/append", () => ev);
 
 import { DELETE, PATCH } from "./route";
 
@@ -26,6 +29,7 @@ const call = (body: unknown = { confirmName: "Office 2026" }) =>
 describe("DELETE /api/leagues/[leagueId]", () => {
   beforeEach(() => {
     Object.assign(q, mockQueries());
+    Object.assign(ev, mockEvents());
     getSessionUser.mockReset().mockResolvedValue({ id: USER_ID, email: null });
     withTransaction
       .mockReset()
@@ -48,6 +52,7 @@ describe("DELETE /api/leagues/[leagueId]", () => {
   it("deletes when the admin types the exact name", async () => {
     expect(await (await call()).json()).toEqual({ ok: true });
     expect(q.deleteLeague).toHaveBeenCalledWith({}, LEAGUE_ID);
+    expect(ev.appendLeagueEvent).not.toHaveBeenCalled();
   });
 
   it("400 confirmation_mismatch for a different name", async () => {
@@ -84,7 +89,8 @@ describe("PATCH /api/leagues/[leagueId]", () => {
     });
 
   beforeEach(() => {
-    Object.assign(q, mockQueries(), { setDraftAt: vi.fn() });
+    Object.assign(q, mockQueries());
+    Object.assign(ev, mockEvents());
     getSessionUser.mockReset().mockResolvedValue({ id: USER_ID, email: null });
     withTransaction
       .mockReset()
@@ -142,5 +148,28 @@ describe("PATCH /api/leagues/[leagueId]", () => {
     q.lockLeagueById.mockResolvedValue(league({ status: "drafting" }));
     expect((await patch({ draftAt: null })).status).toBe(409);
     expect(q.setDraftAt).not.toHaveBeenCalled();
+  });
+
+  it("appends draft_date_changed when the value changed", async () => {
+    await patch({ draftAt: "2026-03-01T13:00:00-06:00" });
+    expect(ev.appendLeagueEvent).toHaveBeenCalledTimes(1);
+    expect(ev.appendLeagueEvent).toHaveBeenCalledWith({}, LEAGUE_ID, USER_ID, {
+      type: "draft_date_changed",
+      payload: { draftAt: "2026-03-01T19:00:00.000Z" },
+    });
+  });
+  it("records a cleared date as null", async () => {
+    await patch({ draftAt: null });
+    expect(ev.appendLeagueEvent.mock.calls[0][3].payload).toEqual({
+      draftAt: null,
+    });
+  });
+  it("appends nothing when the value did not change or the call is refused", async () => {
+    q.setDraftAt.mockResolvedValue(false);
+    await patch({ draftAt: null });
+    q.setDraftAt.mockResolvedValue(true);
+    q.getMemberRole.mockResolvedValue("member");
+    await patch({ draftAt: null });
+    expect(ev.appendLeagueEvent).not.toHaveBeenCalled();
   });
 });

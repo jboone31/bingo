@@ -2,6 +2,8 @@ import { handle } from "@/lib/api/handler";
 import { parseUuid } from "@/lib/api/ids";
 import { ok } from "@/lib/api/response";
 import { withTransaction } from "@/lib/db/server";
+import { appendLeagueEvent, displayNameOf } from "@/lib/events/append";
+import { memberLeft } from "@/lib/events/payload";
 import { assertAllowed } from "@/lib/leagues/guard";
 import {
   deleteMember,
@@ -25,7 +27,14 @@ export const POST = handle<string, { leagueId: string }>({
       const role = league ? await getMemberRole(tx, leagueId, user.id) : null;
       if (league === null || role === null) return ok();
       assertAllowed(canLeave({ status: league.status, role }));
-      await deleteMember(tx, leagueId, user.id);
+      if (await deleteMember(tx, leagueId, user.id)) {
+        await appendLeagueEvent(
+          tx,
+          leagueId,
+          user.id,
+          memberLeft(await displayNameOf(tx, user.id)),
+        );
+      }
       return ok();
     }),
 });

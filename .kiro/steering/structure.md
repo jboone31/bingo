@@ -59,6 +59,7 @@ All API routes use the Node.js runtime and are built on `lib/api`. Pages sit und
   "Dev sign-in".
 - **Auth and profile**: `app/api/auth/callback`, `app/api/auth/sign-out`,
   `app/api/profile`; pages `sign-in` (outside the group, own layout) and `profile`.
+- **Time**: `app/api/time` returns the server clock for the client offset estimate.
 
 ### URL scheme
 
@@ -97,7 +98,13 @@ property-tested in isolation. Current modules:
 - `leagues/`: league rules and validation (pure), SQL (`queries.ts`), RLS reads
   (`read.ts`), and route guards. Player-facing error text is in `messages.ts`.
 
-New domain areas (events, draft, board) get their own folder here.
+- `events/`: the league event log. Pure: types, payload builders, `describeEvent`,
+  `foldEvents` (order, dedupe, holes), `catchUpPlan`, row conversion and `EventFeed`
+  (subscribe, then catch up, coalesced). Server: `append.ts` (`appendLeagueEvent`) and
+  `read.ts` (recent events through RLS).
+- `time/`: `clockOffset.ts`, the round-trip-midpoint server clock estimate (pure).
+
+New domain areas (draft, board) get their own folder here.
 
 ### `components/`
 
@@ -110,8 +117,10 @@ Shared React components.
 - `pool/`: pool screens' components (list, filter bar, add form, CSV import, row
   actions).
 - `queue/`: the queue list (drag and drop) and the add-to-queue button.
+- `realtime/`: the Supabase event source, `useLeagueEvents`, and
+  `ServerClockProvider` (`useServerNow`), mounted in the signed-in layout.
 - `leagues/`: league screens' components (cards, forms, member list, invite panel,
-  confirm and delete dialogs).
+  confirm and delete dialogs, the overview's `ActivityFeed`).
 - `shell/`: the signed-in frame (AppHeader, UserMenu, PageContainer, SubNav).
 - Top level: feature components such as `GoogleSignInButton`, `DisplayNameForm` and
   `LocalTime`.
@@ -124,7 +133,7 @@ Factories for the Supabase client in each runtime: `client.ts` (browser),
 ### `supabase/migrations/`
 
 Numbered SQL files (`NNNN_name.sql`), each wrapped in its own `begin; ... commit;`.
-Applied in order by `npm run db:migrate`. All seven below are applied to the live project.
+Applied in order by `npm run db:migrate`. All nine below are applied to the live project.
 
 | File | Adds |
 | --- | --- |
@@ -135,6 +144,8 @@ Applied in order by `npm run db:migrate`. All seven below are applied to the liv
 | `0005_seed_tag` | `leagues.seed_scenario` (dev tools) |
 | `0006_submissions` | `submissions`, `submission_imports`, pool guard and 5,000 cap |
 | `0007_queue` | `queue_items` (owner-only), its guard, `pool_categories` view |
+| `0008_league_events` | `league_events`, `leagues.last_event_seq`, `append_league_event`, Realtime publication |
+| `0009_league_events_actor_null` | lets `on delete set null` clear `actor_id` past the immutability trigger |
 
 ### `scripts/`
 

@@ -6,18 +6,21 @@ import {
   jsonRequest,
   league,
   mockPoolQueries,
+  mockEvents,
   mockQueries,
 } from "@/test/helpers/leagueRoutes";
 
-const { getSessionUser, withTransaction, q, p } = vi.hoisted(() => ({
+const { getSessionUser, withTransaction, q, p, ev } = vi.hoisted(() => ({
   getSessionUser: vi.fn(),
   withTransaction: vi.fn(),
   q: {} as Record<string, ReturnType<typeof vi.fn>>,
+  ev: {} as Record<string, ReturnType<typeof vi.fn>>,
   p: {} as Record<string, ReturnType<typeof vi.fn>>,
 }));
 vi.mock("@/lib/auth/session", () => ({ getSessionUser }));
 vi.mock("@/lib/db/server", () => ({ withTransaction }));
 vi.mock("@/lib/leagues/queries", () => q);
+vi.mock("@/lib/events/append", () => ev);
 vi.mock("@/lib/pool/queries", () => p);
 
 import { DELETE, POST } from "./route";
@@ -33,6 +36,7 @@ const good = {
 
 beforeEach(() => {
   Object.assign(q, mockQueries());
+  Object.assign(ev, mockEvents());
   Object.assign(p, mockPoolQueries());
   getSessionUser.mockReset().mockResolvedValue({ id: USER_ID, email: null });
   withTransaction
@@ -86,6 +90,15 @@ describe("POST /api/leagues/[leagueId]/submissions", () => {
     ]);
   });
 
+  it("appends pool_changed added for a new row", async () => {
+    await add(good);
+    expect(ev.appendLeagueEvent).toHaveBeenCalledTimes(1);
+    expect(ev.appendLeagueEvent).toHaveBeenCalledWith({}, LEAGUE_ID, USER_ID, {
+      type: "pool_changed",
+      payload: { kind: "added", count: 1 },
+    });
+  });
+
   it("allows an empty submitter and category", async () => {
     const res = await add({ text: "A", requestId: REQUEST_ID });
     expect(res.status).toBe(201);
@@ -109,6 +122,7 @@ describe("POST /api/leagues/[leagueId]/submissions", () => {
       alreadyAdded: true,
     });
     expect(p.insertSubmissions).not.toHaveBeenCalled();
+    expect(ev.appendLeagueEvent).not.toHaveBeenCalled();
   });
 
   it("403 for a member, 404 for a non-member, 409 after the draft starts", async () => {
@@ -154,11 +168,16 @@ describe("DELETE /api/leagues/[leagueId]/submissions", () => {
       ok: true,
       deleted: 7,
     });
+    expect(ev.appendLeagueEvent).toHaveBeenCalledWith({}, LEAGUE_ID, USER_ID, {
+      type: "pool_changed",
+      payload: { kind: "cleared", count: 7 },
+    });
   });
 
   it("succeeds on an empty pool", async () => {
     p.deleteAllSubmissions.mockResolvedValue(0);
     expect((await clear({ all: true })).status).toBe(200);
+    expect(ev.appendLeagueEvent).not.toHaveBeenCalled();
   });
 
   it("refuses members and started drafts", async () => {

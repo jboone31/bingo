@@ -3,6 +3,8 @@ import { ApiError } from "@/lib/api/errors";
 import { handle } from "@/lib/api/handler";
 import { ok } from "@/lib/api/response";
 import { withTransaction } from "@/lib/db/server";
+import { appendLeagueEvent, displayNameOf } from "@/lib/events/append";
+import { memberJoined } from "@/lib/events/payload";
 import { assertAllowed } from "@/lib/leagues/guard";
 import { normalizeJoinCode } from "@/lib/leagues/joinCode";
 import {
@@ -39,6 +41,12 @@ export const POST = handle({
       );
       if (!alreadyMember) {
         await insertMember(tx, league.id, user.id, "member");
+        await appendLeagueEvent(
+          tx,
+          league.id,
+          user.id,
+          memberJoined(await displayNameOf(tx, user.id)),
+        );
       }
       return ok({ leagueId: league.id, alreadyMember });
     }),

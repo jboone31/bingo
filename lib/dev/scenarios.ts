@@ -3,6 +3,16 @@
  * states); the dev page and routes read this registry and need no changes.
  * Pure and client-safe.
  */
+import {
+  adminTransferred,
+  draftDateChanged,
+  joinCodeRegenerated,
+  memberJoined,
+  memberLeft,
+  poolChanged,
+} from "@/lib/events/payload";
+import type { EventDraft } from "@/lib/events/types";
+
 export interface ScenarioPlan {
   readonly leagueName: string;
   /** Your role in the new league. */
@@ -18,6 +28,8 @@ export interface ScenarioPlan {
   readonly viewerQueueSize: number;
   /** Squares in each seed player's queue (F4). */
   readonly fakeQueueSize: number;
+  /** League events to seed, oldest first, spread over the past (F5). */
+  readonly eventCount: number;
 }
 
 export interface Scenario {
@@ -39,6 +51,7 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       poolSubmissions: 0,
       viewerQueueSize: 0,
       fakeQueueSize: 0,
+      eventCount: 0,
     },
   },
   league_with_players: {
@@ -54,6 +67,7 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       poolSubmissions: 0,
       viewerQueueSize: 0,
       fakeQueueSize: 0,
+      eventCount: 0,
     },
   },
   league_full: {
@@ -68,6 +82,7 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       poolSubmissions: 0,
       viewerQueueSize: 0,
       fakeQueueSize: 0,
+      eventCount: 0,
     },
   },
   league_with_pool: {
@@ -83,6 +98,7 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       poolSubmissions: 60,
       viewerQueueSize: 0,
       fakeQueueSize: 0,
+      eventCount: 0,
     },
   },
   pool_ready: {
@@ -98,6 +114,7 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       poolSubmissions: 300,
       viewerQueueSize: 0,
       fakeQueueSize: 0,
+      eventCount: 0,
     },
   },
   queue_started: {
@@ -113,6 +130,23 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       poolSubmissions: 60,
       viewerQueueSize: 8,
       fakeQueueSize: 10,
+      eventCount: 0,
+    },
+  },
+  league_with_activity: {
+    label: "League with activity",
+    description:
+      "Pre-draft. As the League with a pool (40 squares), plus 60 past events, so the activity list shows its 50-event limit. The events are sample noise, not a record of what the data really did.",
+    plan: {
+      leagueName: "[Seed] League with activity",
+      viewerRole: "admin",
+      fakeMembers: 11,
+      fakeAdmin: false,
+      draftAtOffsetDays: 7,
+      poolSubmissions: 40,
+      viewerQueueSize: 0,
+      fakeQueueSize: 0,
+      eventCount: 60,
     },
   },
   member_view: {
@@ -128,6 +162,7 @@ export const SCENARIOS: Readonly<Record<string, Scenario>> = {
       poolSubmissions: 0,
       viewerQueueSize: 0,
       fakeQueueSize: 0,
+      eventCount: 0,
     },
   },
 };
@@ -201,4 +236,53 @@ export function seedQueueOrder(
     { length: count },
     (_, i) => (start + i * stride) % poolSize,
   );
+}
+/** Minutes between consecutive seeded events. */
+export const SEED_EVENT_GAP_MINUTES = 20;
+
+/**
+ * Deterministic sample events for a scenario, oldest first. `names` are display
+ * names to use (at least one). The mix covers every event type. The sequence is
+ * sample noise: it does not describe how the league's data was really built.
+ */
+export function seedEventDrafts(
+  count: number,
+  names: readonly string[],
+): EventDraft[] {
+  const pick = (i: number) => names[i % Math.max(names.length, 1)] ?? "Someone";
+  const drafts: EventDraft[] = [];
+  for (let i = 0; i < count; i += 1) {
+    switch (i % 8) {
+      case 0:
+        drafts.push(memberJoined(pick(i)));
+        break;
+      case 1:
+        drafts.push(poolChanged("imported", 10 + (i % 5)));
+        break;
+      case 2:
+        drafts.push(memberJoined(pick(i + 1)));
+        break;
+      case 3:
+        drafts.push(poolChanged("added", 1));
+        break;
+      case 4:
+        drafts.push(
+          draftDateChanged(i % 16 === 4 ? null : "2026-03-01T19:00:00.000Z"),
+        );
+        break;
+      case 5:
+        drafts.push(poolChanged(i % 16 === 5 ? "edited" : "deleted", 1));
+        break;
+      case 6:
+        drafts.push(joinCodeRegenerated());
+        break;
+      default:
+        drafts.push(
+          i % 16 === 7
+            ? memberLeft(pick(i))
+            : adminTransferred(pick(i), pick(i + 1)),
+        );
+    }
+  }
+  return drafts;
 }

@@ -36,7 +36,7 @@ written and features ship.
 | F2.5 | Dev tooling and seed scenarios | F2             | Done        |
 | F3  | Pool administration             | F2             | Done        |
 | F4  | Pre-draft pool and queue        | F2, F3         | Done        |
-| F5  | Realtime and event log          | F2             | Spec written |
+| F5  | Realtime and event log          | F2             | Done        |
 | F6  | Draft setup and start           | F3, F4         | Not started |
 | F7  | Draft engine and timers         | F5, F6         | Not started |
 | F8  | Draft room UI                   | F7             | Not started |
@@ -46,14 +46,13 @@ written and features ship.
 
 ## Status And Handoff
 
-Built and committed: **F0 to F4**. Nothing is half done. The working tree is clean.
-**Next: F5 (Realtime and event log).** Its spec does not exist yet.
+Built and committed: **F0 to F5**. Nothing is half done. The working tree is clean.
 
-**Before writing the F5 spec, bring these to the user** (with a recommendation each):
-which league activity becomes an event (joins, leaves, removals, admin transfer, code
-regeneration, draft date, pool changes; queues are private and should not be in a
-league-wide feed); the event table's shape and ordering; how the browser learns server
-time; and how long events are kept.
+**Next: F6 (Draft setup and start).** Its spec does not exist yet. Settle its open
+questions with the user first (see the F6 section).
+
+F5 manual checks (`realtime-events` 6.3 to 6.6: Activity list, two-tab live updates,
+offline catch-up, 360px) have not been confirmed by the user.
 
 **Manual checks still unticked** in the specs (the user tested most flows informally
 but has not confirmed these):
@@ -205,6 +204,13 @@ while `pre_draft` (F7 extends it). See `.kiro/specs/queue/`.
 
 Decided: group scoping is deferred to F7. F5 does not depend on F6.
 
+Decided: one table, `league_events`, with a gap-free per-league `seq` assigned under the
+league row lock; events appended in the change's transaction, only when something
+changed; names copied into payloads; event types are open (a format check); all events
+kept. Server time from `GET /api/time` and `useServerNow()`. First consumer: the
+overview's Activity list (latest 50), which refreshes the page on new events. See
+`.kiro/specs/realtime-events/`.
+
 Open: how groups map onto channels and access rules (answered in F7).
 
 From earlier features:
@@ -256,6 +262,15 @@ From earlier features:
   without waiting.
 
 From earlier features:
+- F5 built the event log (`lib/events/`, `league_events`). Draft events can use the
+  same table and `appendLeagueEvent`, or a group-scoped table with its own policy; both
+  keep the per-scope gap-free `seq`. In F5 the client does **not** derive state from
+  events (it refreshes server data). If the draft room derives state from events, the
+  50-event first load is not enough: load a snapshot plus the `seq` it reflects, then
+  apply later events, or load the whole group log (bounded at 25 x group size). Decide
+  in the F7 spec, and revisit retention.
+- Countdowns: use `useServerNow()` from `components/realtime/ServerClockProvider.tsx`.
+  Nudge responses can also carry `now` to refine the offset.
 - Queues must stay editable during the draft. Replace `queue_items_guard` in a new
   migration so `drafting` is allowed, and update `canEditQueue` and `canAddToQueue` in
   `lib/queue/rules.ts` and the tests that expect 409 `league_not_pre_draft`.

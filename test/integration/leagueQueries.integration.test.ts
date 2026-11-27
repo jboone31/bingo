@@ -6,6 +6,7 @@ import {
   createLeague,
   deleteLeague,
   deleteMember,
+  setDraftAt,
   getMemberRole,
   insertMember,
   lockLeagueByCode,
@@ -17,7 +18,7 @@ import { cleanup, createUser, hasDb } from "./helpers";
 
 /** The SQL in lib/leagues/queries.ts, run against the live database. */
 
-describe.skipIf(!hasDb)("league queries", () => {
+describe.skipIf(!hasDb)("league queries", { timeout: 60_000 }, () => {
   let admin: string;
   let other: string;
 
@@ -93,10 +94,21 @@ describe.skipIf(!hasDb)("league queries", () => {
       (await withTransaction((tx) => lockLeagueByCode(tx, newCode)))?.id,
     ).toBe(id);
 
-    await withTransaction((tx) => deleteMember(tx, id, other));
+    expect(await withTransaction((tx) => deleteMember(tx, id, other))).toBe(
+      true,
+    );
+    expect(await withTransaction((tx) => deleteMember(tx, id, other))).toBe(
+      false,
+    );
     expect(
       await withTransaction((tx) => getMemberRole(tx, id, other)),
     ).toBeNull();
+    // The draft date reports whether it changed.
+    const when = "2026-05-01T12:00:00.000Z";
+    expect(await withTransaction((tx) => setDraftAt(tx, id, when))).toBe(true);
+    expect(await withTransaction((tx) => setDraftAt(tx, id, when))).toBe(false);
+    expect(await withTransaction((tx) => setDraftAt(tx, id, null))).toBe(true);
+    expect(await withTransaction((tx) => setDraftAt(tx, id, null))).toBe(false);
   });
 
   it("transfers admin by demoting first, then promoting", async () => {

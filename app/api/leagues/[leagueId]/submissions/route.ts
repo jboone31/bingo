@@ -4,6 +4,8 @@ import { handle } from "@/lib/api/handler";
 import { parseUuid } from "@/lib/api/ids";
 import { ok } from "@/lib/api/response";
 import { withTransaction } from "@/lib/db/server";
+import { appendLeagueEvent } from "@/lib/events/append";
+import { poolChanged } from "@/lib/events/payload";
 import { assertAllowed, lockLeagueForMember } from "@/lib/leagues/guard";
 import { parseCategory, parseSubmitter, parseText } from "@/lib/pool/fields";
 import {
@@ -85,6 +87,12 @@ export const POST = handle<AddInput, { leagueId: string }>({
           },
         ],
       );
+      await appendLeagueEvent(
+        tx,
+        input.leagueId,
+        user.id,
+        poolChanged("added", 1),
+      );
       return ok({ submission: { id } }, 201);
     }),
 });
@@ -100,6 +108,15 @@ export const DELETE = handle<string, { leagueId: string }>({
     withTransaction(async (tx) => {
       const { league, role } = await lockLeagueForMember(tx, leagueId, user.id);
       assertAllowed(canEditPool({ status: league.status, actorRole: role }));
-      return ok({ deleted: await deleteAllSubmissions(tx, leagueId) });
+      const deleted = await deleteAllSubmissions(tx, leagueId);
+      if (deleted > 0) {
+        await appendLeagueEvent(
+          tx,
+          leagueId,
+          user.id,
+          poolChanged("cleared", deleted),
+        );
+      }
+      return ok({ deleted });
     }),
 });

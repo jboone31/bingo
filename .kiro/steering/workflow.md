@@ -71,6 +71,13 @@ These each caused a bug. The rules are in `conventions.md`; this is the short li
   not grant by default, so a policy alone gives "permission denied".
 - **PostgREST**: escape `ilike` patterns with `searchPattern` and `exactPattern`; embed
   relationships by constraint name (`submissions!queue_items_submission_fkey`).
+- **postgres.js and jsonb**: a string bound to `$1::jsonb` is stored as a JSON
+  *string*. Cast `$1::text::jsonb`. Route tests mock the query layer, so only a live
+  integration test catches this.
+- **Many parallel queries hang the pooler**: more than about 5 concurrent queries through
+  `getSql()` never return. Batch parallel work in tests to 5.
+- **`on delete set null` is an UPDATE** to triggers, so an immutability trigger must
+  allow it (migration 0009).
 - **The server connects as the database owner**, which bypasses RLS. Server code (and
   tests) can read any player's queue. The browser cannot.
 - **Hot reload can serve a stale route** in `next dev`. Unexpected route errors print

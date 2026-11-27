@@ -4,6 +4,7 @@ import { withTransaction } from "@/lib/db/server";
 import { createLeague } from "@/lib/leagues/queries";
 import { insertSubmissions, recordImport } from "@/lib/pool/queries";
 import { planFor, seedPoolRows, seedQueueOrder } from "./scenarios";
+import { insertSeedEvents } from "./seedEvents";
 import { insertSeedQueue } from "./seedQueue";
 import { ensureSeedUsers } from "./seedUsers";
 
@@ -72,6 +73,9 @@ export async function seedScenario(
           picks.map((index) => submissionIds[index]),
         );
       }
+    }
+    if (plan.eventCount > 0) {
+      await insertSeedEvents(tx, id, plan.eventCount, [adminId, ...others]);
     }
     return id;
   });

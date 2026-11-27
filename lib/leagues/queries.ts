@@ -92,15 +92,18 @@ export async function insertMember(
   );
 }
 
+/** Remove a membership. Returns whether a row was deleted. */
 export async function deleteMember(
   tx: QueryRunner,
   leagueId: string,
   userId: string,
-): Promise<void> {
-  await tx.query(
-    `delete from public.league_members where league_id = $1 and user_id = $2`,
+): Promise<boolean> {
+  const { rows } = await tx.query(
+    `delete from public.league_members where league_id = $1 and user_id = $2
+      returning user_id`,
     [leagueId, userId],
   );
+  return rows.length > 0;
 }
 
 export async function setRole(
@@ -137,16 +140,19 @@ export async function setJoinCode(
   throw new Error("could not allocate a join code");
 }
 
-/** Set or clear (`null`) the draft date. */
+/** Set or clear (`null`) the draft date. Returns whether the value changed. */
 export async function setDraftAt(
   tx: QueryRunner,
   leagueId: string,
   draftAt: string | null,
-): Promise<void> {
-  await tx.query(`update public.leagues set draft_at = $2 where id = $1`, [
-    leagueId,
-    draftAt,
-  ]);
+): Promise<boolean> {
+  const { rows } = await tx.query(
+    `update public.leagues set draft_at = $2::timestamptz
+      where id = $1 and draft_at is distinct from $2::timestamptz
+      returning id`,
+    [leagueId, draftAt],
+  );
+  return rows.length > 0;
 }
 
 export async function deleteLeague(

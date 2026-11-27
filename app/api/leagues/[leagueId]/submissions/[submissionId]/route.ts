@@ -4,6 +4,8 @@ import { handle } from "@/lib/api/handler";
 import { parseUuid } from "@/lib/api/ids";
 import { ok } from "@/lib/api/response";
 import { withTransaction } from "@/lib/db/server";
+import { appendLeagueEvent } from "@/lib/events/append";
+import { poolChanged } from "@/lib/events/payload";
 import { assertAllowed, lockLeagueForMember } from "@/lib/leagues/guard";
 import { parseCategory, parseSubmitter, parseText } from "@/lib/pool/fields";
 import {
@@ -62,13 +64,23 @@ export const PATCH = handle<
         user.id,
       );
       assertAllowed(canEditPool({ status: league.status, actorRole: role }));
-      const found = await updateSubmission(
+      const outcome = await updateSubmission(
         tx,
         input.leagueId,
         input.submissionId,
         input.patch,
       );
-      if (!found) throw new ApiError("submission_not_found", 404);
+      if (outcome === "missing") {
+        throw new ApiError("submission_not_found", 404);
+      }
+      if (outcome === "updated") {
+        await appendLeagueEvent(
+          tx,
+          input.leagueId,
+          user.id,
+          poolChanged("edited", 1),
+        );
+      }
       return ok();
     }),
 });
@@ -90,7 +102,14 @@ export const DELETE = handle<
         user.id,
       );
       assertAllowed(canEditPool({ status: league.status, actorRole: role }));
-      await deleteSubmission(tx, input.leagueId, input.submissionId);
+      if (await deleteSubmission(tx, input.leagueId, input.submissionId)) {
+        await appendLeagueEvent(
+          tx,
+          input.leagueId,
+          user.id,
+          poolChanged("deleted", 1),
+        );
+      }
       return ok();
     }),
 });

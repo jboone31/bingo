@@ -4,6 +4,8 @@ import { handle } from "@/lib/api/handler";
 import { parseUuid } from "@/lib/api/ids";
 import { ok } from "@/lib/api/response";
 import { withTransaction } from "@/lib/db/server";
+import { appendLeagueEvent } from "@/lib/events/append";
+import { draftDateChanged } from "@/lib/events/payload";
 import { assertAllowed, lockLeagueForMember } from "@/lib/leagues/guard";
 import { parseDraftAt } from "@/lib/leagues/draftAt";
 import { deleteLeague, setDraftAt } from "@/lib/leagues/queries";
@@ -39,7 +41,14 @@ export const PATCH = handle<
       assertAllowed(
         canSetDraftDate({ status: league.status, actorRole: role }),
       );
-      await setDraftAt(tx, input.leagueId, input.draftAt);
+      if (await setDraftAt(tx, input.leagueId, input.draftAt)) {
+        await appendLeagueEvent(
+          tx,
+          input.leagueId,
+          user.id,
+          draftDateChanged(input.draftAt),
+        );
+      }
       return ok({ draftAt: input.draftAt });
     }),
 });

@@ -14,7 +14,7 @@ import { asRole, cleanup, createLeague, createUser, hasDb } from "./helpers";
 
 /** Live checks for submissions, their triggers, RLS, and the pool queries. */
 
-describe.skipIf(!hasDb)("pool", () => {
+describe.skipIf(!hasDb)("pool", { timeout: 60_000 }, () => {
   let admin: string;
   let member: string;
   let stranger: string;
@@ -266,7 +266,13 @@ describe.skipIf(!hasDb)("pool", () => {
         await withTransaction((tx) =>
           updateSubmission(tx, l1, id, { category: "Y" }),
         ),
-      ).toBe(true);
+      ).toBe("updated");
+      // The same values again change nothing.
+      expect(
+        await withTransaction((tx) =>
+          updateSubmission(tx, l1, id, { category: "Y", text: "Original" }),
+        ),
+      ).toBe("unchanged");
       const [row] =
         await getSql()`select text, submitter, category from public.submissions where id = ${id}`;
       expect(row).toMatchObject({
@@ -279,7 +285,7 @@ describe.skipIf(!hasDb)("pool", () => {
         await withTransaction((tx) =>
           updateSubmission(tx, l2, id, { text: "Hijack" }),
         ),
-      ).toBe(false);
+      ).toBe("missing");
       const [after] =
         await getSql()`select text from public.submissions where id = ${id}`;
       expect(after.text).toBe("Original");
@@ -302,8 +308,12 @@ describe.skipIf(!hasDb)("pool", () => {
           })),
         ),
       );
-      await withTransaction((tx) => deleteSubmission(tx, l, ids[0]));
-      await withTransaction((tx) => deleteSubmission(tx, l, ids[0]));
+      expect(
+        await withTransaction((tx) => deleteSubmission(tx, l, ids[0])),
+      ).toBe(true);
+      expect(
+        await withTransaction((tx) => deleteSubmission(tx, l, ids[0])),
+      ).toBe(false);
       expect(await withTransaction((tx) => countSubmissions(tx, l))).toBe(2);
       expect(await withTransaction((tx) => deleteAllSubmissions(tx, l))).toBe(
         2,

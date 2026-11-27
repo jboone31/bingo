@@ -6,18 +6,21 @@ import {
   jsonRequest,
   league,
   mockPoolQueries,
+  mockEvents,
   mockQueries,
 } from "@/test/helpers/leagueRoutes";
 
-const { getSessionUser, withTransaction, q, p } = vi.hoisted(() => ({
+const { getSessionUser, withTransaction, q, p, ev } = vi.hoisted(() => ({
   getSessionUser: vi.fn(),
   withTransaction: vi.fn(),
   q: {} as Record<string, ReturnType<typeof vi.fn>>,
+  ev: {} as Record<string, ReturnType<typeof vi.fn>>,
   p: {} as Record<string, ReturnType<typeof vi.fn>>,
 }));
 vi.mock("@/lib/auth/session", () => ({ getSessionUser }));
 vi.mock("@/lib/db/server", () => ({ withTransaction }));
 vi.mock("@/lib/leagues/queries", () => q);
+vi.mock("@/lib/events/append", () => ev);
 vi.mock("@/lib/pool/queries", () => p);
 
 import { DELETE, PATCH } from "./route";
@@ -32,6 +35,7 @@ const del = (id = SUBMISSION_ID) =>
 
 beforeEach(() => {
   Object.assign(q, mockQueries());
+  Object.assign(ev, mockEvents());
   Object.assign(p, mockPoolQueries());
   getSessionUser.mockReset().mockResolvedValue({ id: USER_ID, email: null });
   withTransaction
@@ -39,7 +43,7 @@ beforeEach(() => {
     .mockImplementation((fn: (tx: unknown) => unknown) => fn({}));
   q.lockLeagueById.mockResolvedValue(league());
   q.getMemberRole.mockResolvedValue("admin");
-  p.updateSubmission.mockResolvedValue(true);
+  p.updateSubmission.mockResolvedValue("updated");
 });
 
 describe("PATCH submission", () => {
@@ -78,13 +82,26 @@ describe("PATCH submission", () => {
     );
   });
 
+  it("appends pool_changed edited only when a field changed", async () => {
+    await patch({ text: "A" });
+    expect(ev.appendLeagueEvent).toHaveBeenCalledTimes(1);
+    expect(ev.appendLeagueEvent).toHaveBeenCalledWith({}, LEAGUE_ID, USER_ID, {
+      type: "pool_changed",
+      payload: { kind: "edited", count: 1 },
+    });
+    ev.appendLeagueEvent.mockClear();
+    p.updateSubmission.mockResolvedValue("unchanged");
+    expect((await patch({ text: "A" })).status).toBe(200);
+    expect(ev.appendLeagueEvent).not.toHaveBeenCalled();
+  });
+
   it("lets an empty submitter clear the field", async () => {
     await patch({ submitter: "" });
     expect(p.updateSubmission.mock.calls[0][3]).toEqual({ submitter: "" });
   });
 
   it("404 submission_not_found when the row is not in this league", async () => {
-    p.updateSubmission.mockResolvedValue(false);
+    p.updateSubmission.mockResolvedValue("missing");
     const res = await patch({ text: "A" });
     expect(res.status).toBe(404);
     expect(await res.json()).toEqual({
@@ -116,8 +133,17 @@ describe("DELETE submission", () => {
   });
 
   it("succeeds when the row is already gone (the query is a no-op)", async () => {
-    p.deleteSubmission.mockResolvedValue(undefined);
+    p.deleteSubmission.mockResolvedValue(false);
     expect((await del()).status).toBe(200);
+    expect(ev.appendLeagueEvent).not.toHaveBeenCalled();
+  });
+
+  it("appends pool_changed deleted when a row was removed", async () => {
+    await del();
+    expect(ev.appendLeagueEvent).toHaveBeenCalledWith({}, LEAGUE_ID, USER_ID, {
+      type: "pool_changed",
+      payload: { kind: "deleted", count: 1 },
+    });
   });
 
   it("400 for a bad id, 401 signed out", async () => {

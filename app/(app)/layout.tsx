@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ServerClockProvider } from "@/components/realtime/ServerClockProvider";
 import { AppHeader } from "@/components/shell/AppHeader";
 import { PageContainer } from "@/components/shell/PageContainer";
 import { getSessionUser } from "@/lib/auth/session";
@@ -24,7 +25,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             : null
         }
       />
-      <PageContainer>{children}</PageContainer>
+      <ServerClockProvider>
+        <PageContainer>{children}</PageContainer>
+      </ServerClockProvider>
     </>
   );
 }

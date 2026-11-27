@@ -4,17 +4,20 @@ import {
   USER_ID,
   jsonRequest,
   league,
+  mockEvents,
   mockQueries,
 } from "@/test/helpers/leagueRoutes";
 
-const { getSessionUser, withTransaction, q } = vi.hoisted(() => ({
+const { getSessionUser, withTransaction, q, ev } = vi.hoisted(() => ({
   getSessionUser: vi.fn(),
   withTransaction: vi.fn(),
   q: {} as Record<string, ReturnType<typeof vi.fn>>,
+  ev: {} as Record<string, ReturnType<typeof vi.fn>>,
 }));
 vi.mock("@/lib/auth/session", () => ({ getSessionUser }));
 vi.mock("@/lib/db/server", () => ({ withTransaction }));
 vi.mock("@/lib/leagues/queries", () => q);
+vi.mock("@/lib/events/append", () => ev);
 
 import { POST } from "./route";
 
@@ -24,6 +27,7 @@ const call = (id = LEAGUE_ID) =>
 describe("POST /api/leagues/[leagueId]/leave", () => {
   beforeEach(() => {
     Object.assign(q, mockQueries());
+    Object.assign(ev, mockEvents());
     getSessionUser.mockReset().mockResolvedValue({ id: USER_ID, email: null });
     withTransaction
       .mockReset()
@@ -70,5 +74,26 @@ describe("POST /api/leagues/[leagueId]/leave", () => {
     const res = await call();
     expect(res.status).toBe(409);
     expect(q.deleteMember).not.toHaveBeenCalled();
+  });
+
+  it("appends member_left when a row was removed", async () => {
+    await call();
+    expect(ev.appendLeagueEvent).toHaveBeenCalledTimes(1);
+    expect(ev.appendLeagueEvent).toHaveBeenCalledWith({}, LEAGUE_ID, USER_ID, {
+      type: "member_left",
+      payload: { name: "Sam" },
+    });
+  });
+  it("appends nothing when no row was removed, or the caller is not a member", async () => {
+    q.deleteMember.mockResolvedValue(false);
+    await call();
+    q.getMemberRole.mockResolvedValue(null);
+    await call();
+    expect(ev.appendLeagueEvent).not.toHaveBeenCalled();
+  });
+  it("appends nothing when leaving is refused", async () => {
+    q.getMemberRole.mockResolvedValue("admin");
+    await call();
+    expect(ev.appendLeagueEvent).not.toHaveBeenCalled();
   });
 });

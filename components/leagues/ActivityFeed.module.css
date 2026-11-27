@@ -1,0 +1,32 @@
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.status {
+  margin: 0;
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-raised);
+}
+.item:last-child {
+  border-bottom: 0;
+}
+.text {
+  overflow-wrap: anywhere;
+}
+.time {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}

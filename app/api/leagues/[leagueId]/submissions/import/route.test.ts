@@ -6,18 +6,21 @@ import {
   jsonRequest,
   league,
   mockPoolQueries,
+  mockEvents,
   mockQueries,
 } from "@/test/helpers/leagueRoutes";
 
-const { getSessionUser, withTransaction, q, p } = vi.hoisted(() => ({
+const { getSessionUser, withTransaction, q, p, ev } = vi.hoisted(() => ({
   getSessionUser: vi.fn(),
   withTransaction: vi.fn(),
   q: {} as Record<string, ReturnType<typeof vi.fn>>,
+  ev: {} as Record<string, ReturnType<typeof vi.fn>>,
   p: {} as Record<string, ReturnType<typeof vi.fn>>,
 }));
 vi.mock("@/lib/auth/session", () => ({ getSessionUser }));
 vi.mock("@/lib/db/server", () => ({ withTransaction }));
 vi.mock("@/lib/leagues/queries", () => q);
+vi.mock("@/lib/events/append", () => ev);
 vi.mock("@/lib/pool/queries", () => p);
 
 import { POST } from "./route";
@@ -28,6 +31,7 @@ const CSV = "text,submitter,category\nA,Sam,X\nA,Sam,X\nB,,\n";
 
 beforeEach(() => {
   Object.assign(q, mockQueries());
+  Object.assign(ev, mockEvents());
   Object.assign(p, mockPoolQueries());
   getSessionUser.mockReset().mockResolvedValue({ id: USER_ID, email: null });
   withTransaction
@@ -103,6 +107,11 @@ describe("POST /api/leagues/[leagueId]/submissions/import", () => {
     expect(res.status).toBe(201);
     expect(await res.json()).toEqual({ ok: true, imported: 3 });
     expect(p.insertSubmissions.mock.calls[0][3]).toHaveLength(3);
+    expect(ev.appendLeagueEvent).toHaveBeenCalledTimes(1);
+    expect(ev.appendLeagueEvent).toHaveBeenCalledWith({}, LEAGUE_ID, USER_ID, {
+      type: "pool_changed",
+      payload: { kind: "imported", count: 3 },
+    });
   });
 
   it("returns 422 with row errors and imports nothing for a bad file", async () => {
@@ -141,6 +150,7 @@ describe("POST /api/leagues/[leagueId]/submissions/import", () => {
       alreadyImported: true,
     });
     expect(p.insertSubmissions).not.toHaveBeenCalled();
+    expect(ev.appendLeagueEvent).not.toHaveBeenCalled();
   });
 
   it("409 pool_full when the file would pass the cap", async () => {

@@ -3,6 +3,8 @@ import { handle } from "@/lib/api/handler";
 import { parseUuid } from "@/lib/api/ids";
 import { ok } from "@/lib/api/response";
 import { withTransaction } from "@/lib/db/server";
+import { appendLeagueEvent, displayNameOf } from "@/lib/events/append";
+import { adminTransferred } from "@/lib/events/payload";
 import { assertAllowed, lockLeagueForMember } from "@/lib/leagues/guard";
 import { getMemberRole, setRole } from "@/lib/leagues/queries";
 import { canTransfer } from "@/lib/leagues/rules";
@@ -34,6 +36,15 @@ export const POST = handle<
         // Demote first so the one-admin unique index is never violated.
         await setRole(tx, input.leagueId, user.id, "member");
         await setRole(tx, input.leagueId, input.targetId, "admin");
+        await appendLeagueEvent(
+          tx,
+          input.leagueId,
+          user.id,
+          adminTransferred(
+            await displayNameOf(tx, user.id),
+            await displayNameOf(tx, input.targetId),
+          ),
+        );
       }
       return ok();
     }),

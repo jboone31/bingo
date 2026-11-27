@@ -13,6 +13,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 import { AppHeader } from "@/components/shell/AppHeader";
+import { SCENARIOS } from "@/lib/dev/scenarios";
 import { ToastProvider } from "@/components/ui/Toast";
 import { DevBanner } from "./DevBanner";
 import { DevSignIn } from "./DevSignIn";
@@ -50,7 +51,9 @@ describe("DevTools", () => {
     const fetchMock = reply(201, { ok: true, leagueId: "L1" });
     vi.stubGlobal("fetch", fetchMock);
     setup();
-    expect(screen.getAllByRole("button", { name: "Run" })).toHaveLength(7);
+    expect(screen.getAllByRole("button", { name: "Run" })).toHaveLength(
+      Object.keys(SCENARIOS).length,
+    );
     await userEvent.click(screen.getAllByRole("button", { name: "Run" })[1]);
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/dev/seed",

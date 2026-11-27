@@ -4,17 +4,20 @@ import {
   USER_ID,
   jsonRequest,
   league,
+  mockEvents,
   mockQueries,
 } from "@/test/helpers/leagueRoutes";
 
-const { getSessionUser, withTransaction, q } = vi.hoisted(() => ({
+const { getSessionUser, withTransaction, q, ev } = vi.hoisted(() => ({
   getSessionUser: vi.fn(),
   withTransaction: vi.fn(),
   q: {} as Record<string, ReturnType<typeof vi.fn>>,
+  ev: {} as Record<string, ReturnType<typeof vi.fn>>,
 }));
 vi.mock("@/lib/auth/session", () => ({ getSessionUser }));
 vi.mock("@/lib/db/server", () => ({ withTransaction }));
 vi.mock("@/lib/leagues/queries", () => q);
+vi.mock("@/lib/events/append", () => ev);
 
 import { POST } from "./route";
 
@@ -24,6 +27,7 @@ const call = (body: unknown) =>
 describe("POST /api/leagues/join", () => {
   beforeEach(() => {
     Object.assign(q, mockQueries());
+    Object.assign(ev, mockEvents());
     getSessionUser.mockReset().mockResolvedValue({ id: USER_ID, email: null });
     withTransaction
       .mockReset()
@@ -102,5 +106,24 @@ describe("POST /api/leagues/join", () => {
     const res = await call({ code: "K7P2QX9M" });
     expect(res.status).toBe(500);
     expect(JSON.stringify(await res.json())).not.toContain("hunter2");
+  });
+
+  it("appends member_joined for a new member", async () => {
+    await call({ code: "K7P2QX9M" });
+    expect(ev.appendLeagueEvent).toHaveBeenCalledTimes(1);
+    expect(ev.appendLeagueEvent).toHaveBeenCalledWith({}, LEAGUE_ID, USER_ID, {
+      type: "member_joined",
+      payload: { name: "Sam" },
+    });
+  });
+  it("appends nothing when the caller is already a member", async () => {
+    q.getMemberRole.mockResolvedValue("member");
+    await call({ code: "K7P2QX9M" });
+    expect(ev.appendLeagueEvent).not.toHaveBeenCalled();
+  });
+  it("appends nothing when the join is refused", async () => {
+    q.lockLeagueByCode.mockResolvedValue(league({ status: "drafting" }));
+    await call({ code: "K7P2QX9M" });
+    expect(ev.appendLeagueEvent).not.toHaveBeenCalled();
   });
 });

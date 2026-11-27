@@ -31,9 +31,10 @@ export function mockQueries() {
     getMemberRole: vi.fn(),
     countMembers: vi.fn(),
     insertMember: vi.fn(),
-    deleteMember: vi.fn(),
+    deleteMember: vi.fn().mockResolvedValue(true),
     setRole: vi.fn(),
     setJoinCode: vi.fn(),
+    setDraftAt: vi.fn().mockResolvedValue(true),
     deleteLeague: vi.fn(),
     createLeague: vi.fn(),
   };
@@ -59,7 +60,7 @@ export function mockPoolQueries() {
     countSubmissions: vi.fn(),
     firstSubmissionOfImport: vi.fn(),
     updateSubmission: vi.fn(),
-    deleteSubmission: vi.fn(),
+    deleteSubmission: vi.fn().mockResolvedValue(true),
     deleteAllSubmissions: vi.fn(),
   };
 }
@@ -73,5 +74,12 @@ export function mockQueueQueries() {
     insertQueueItem: vi.fn(),
     deleteQueueItem: vi.fn(),
     rewriteOrder: vi.fn(),
+  };
+}
+/** The event helpers the routes call (`@/lib/events/append`), all mocked. */
+export function mockEvents() {
+  return {
+    appendLeagueEvent: vi.fn().mockResolvedValue(1),
+    displayNameOf: vi.fn().mockResolvedValue("Sam"),
   };
 }

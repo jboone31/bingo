@@ -98,39 +98,57 @@ export interface SubmissionPatch {
   category?: string;
 }
 
+/** What {@link updateSubmission} found. */
+export type UpdateOutcome = "updated" | "unchanged" | "missing";
+
 /**
  * Update the given fields of one submission in this league. Column names come from a
- * fixed list, never from the request. Returns `false` if there is no such row.
+ * fixed list, never from the request. Says whether the row was missing, already held
+ * these values, or was changed.
  */
 export async function updateSubmission(
   tx: QueryRunner,
   leagueId: string,
   id: string,
   patch: SubmissionPatch,
-): Promise<boolean> {
+): Promise<UpdateOutcome> {
   const columns = (["text", "submitter", "category"] as const).filter(
     (c) => patch[c] !== undefined,
   );
-  if (columns.length === 0) return true;
+  if (columns.length === 0) return "unchanged";
+  const values = columns.map((c) => patch[c]);
   const assignments = columns.map((c, i) => `${c} = $${i + 3}`).join(", ");
+  const differs = columns
+    .map((c, i) => `${c} is distinct from $${i + 3}`)
+    .join(" or ");
   const { rows } = await tx.query(
-    `update public.submissions set ${assignments}
-      where id = $1 and league_id = $2
-      returning id`,
-    [id, leagueId, ...columns.map((c) => patch[c])],
+    `with found as (
+       select id from public.submissions where id = $1 and league_id = $2
+     ), changed as (
+       update public.submissions set ${assignments}
+        where id = $1 and league_id = $2 and (${differs})
+        returning id
+     )
+     select (select count(*) from found)::int as found,
+            (select count(*) from changed)::int as changed`,
+    [id, leagueId, ...values],
   );
-  return rows.length > 0;
+  if (Number(rows[0].found) === 0) return "missing";
+  return Number(rows[0].changed) > 0 ? "updated" : "unchanged";
 }
 
+/** Delete one submission. Returns whether a row was deleted. */
 export async function deleteSubmission(
   tx: QueryRunner,
   leagueId: string,
   id: string,
-): Promise<void> {
-  await tx.query(
-    `delete from public.submissions where id = $1 and league_id = $2`,
+): Promise<boolean> {
+  const { rows } = await tx.query(
+    `delete from public.submissions where id = $1 and league_id = $2
+      returning id`,
     [id, leagueId],
   );
+  return rows.length > 0;
 }
 
 export async function deleteAllSubmissions(

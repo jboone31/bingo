@@ -5,6 +5,8 @@ import { handle } from "@/lib/api/handler";
 import { parseUuid } from "@/lib/api/ids";
 import { ok } from "@/lib/api/response";
 import { withTransaction } from "@/lib/db/server";
+import { appendLeagueEvent } from "@/lib/events/append";
+import { poolChanged } from "@/lib/events/payload";
 import { assertAllowed, lockLeagueForMember } from "@/lib/leagues/guard";
 import { importCsv } from "@/lib/pool/importCsv";
 import { MAX_CSV_BYTES, PREVIEW_ROWS } from "@/lib/pool/limits";
@@ -94,6 +96,12 @@ export const POST = handle<ImportInput, { leagueId: string }>({
         return ok({ imported: record.rowCount, alreadyImported: true });
       }
       await insertSubmissions(tx, input.leagueId, record.importId, result.rows);
+      await appendLeagueEvent(
+        tx,
+        input.leagueId,
+        user.id,
+        poolChanged("imported", result.rows.length),
+      );
       return ok({ imported: result.rows.length }, 201);
     }),
 });

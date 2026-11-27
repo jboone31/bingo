@@ -79,6 +79,24 @@ say so in the spec and update this file.
 - Unexpected errors are logged on the server as `[api] unexpected error: ...` (name,
   database code, message; no stack) and returned as `internal_error` with no detail.
 
+## Events
+
+- Every route that changes league data appends one event to `league_events` with
+  `appendLeagueEvent` (`lib/events/append.ts`), inside the same transaction and after
+  the change, and only when something actually changed (a no-op repeat adds nothing).
+- Build events with the builders in `lib/events/payload.ts`. Payloads hold display
+  names and counts only, never join codes, CSV rows or emails. Add a sentence for each
+  new type in `lib/events/describe.ts`.
+- `seq` is per league, gap-free, assigned under the league row lock by
+  `append_league_event`. Clients order, dedupe and detect holes by `seq` only, through
+  `foldEvents` (`lib/events/fold.ts`). Never order events by `created_at`.
+- Browser code subscribes with `useLeagueEvents` (`components/realtime/`), which
+  subscribes before it reads and catches up after reconnects, holes and quiet periods.
+- Countdowns use `useServerNow()` (`ServerClockProvider`, mounted in the signed-in
+  layout), never the raw client clock.
+- With postgres.js, bind JSON as text and cast `$n::text::jsonb`. A string bound to
+  `$n::jsonb` is stored as a JSON string, not an object.
+
 ## Code Layout
 
 - `lib/<area>/` holds framework-free logic for one domain area, with its tests beside
