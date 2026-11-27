@@ -16,7 +16,8 @@ Depends on F1.5. Rules referenced: `draft-rules.md` (Leagues And Membership),
 - **Create form**: league name (1 to 60 characters) and an optional draft date. F3
   adds editing of the date.
 - **Deletion**: only the admin, only while `pre_draft`, confirmed by typing the league
-  name. The delete cascades to everything the league owns.
+  name. The delete cascades to everything the league owns. **Changed after F6**: any
+  status (see `draft-rules.md`), with an extra warning once the draft has started.
 - **Removal**: the admin can remove another member while `pre_draft`.
 - **Leaving**: a member can leave while `pre_draft`. The admin cannot leave. They must
   transfer admin or delete the league.
@@ -102,7 +103,8 @@ Depends on F1.5. Rules referenced: `draft-rules.md` (Leagues And Membership),
    transaction. A league always has exactly one admin, enforced by a unique index.
    Transferring to someone already admin succeeds without change. A target who is not
    a member is refused with `target_not_member`.
-4. **Delete league**: only while `pre_draft`. The admin must type the league name. A
+4. **Delete league**: only while `pre_draft` (changed after F6: any status). The
+   admin must type the league name. A
    mismatch is refused with `confirmation_mismatch`. On success the league and its
    members are gone and the user returns home.
 

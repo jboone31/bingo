@@ -174,6 +174,43 @@ describe("InvitePanel", () => {
 });
 
 describe("DeleteLeagueDialog", () => {
+  it("warns that picks go too once the draft has started", async () => {
+    wrap(
+      <DeleteLeagueDialog
+        leagueId="L1"
+        leagueName="Office 2026"
+        status="drafting"
+      />,
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Delete league" }),
+    );
+    expect(screen.getByText(/The draft has started\./)).toBeInTheDocument();
+    expect(screen.getByText(/picks will be deleted too/)).toBeInTheDocument();
+  });
+
+  it("mentions boards once the league is in progress, and nothing extra before the start", async () => {
+    const { unmount } = wrap(
+      <DeleteLeagueDialog
+        leagueId="L1"
+        leagueName="Office 2026"
+        status="in_progress"
+      />,
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Delete league" }),
+    );
+    expect(
+      screen.getByText(/picks and boards will be deleted/),
+    ).toBeInTheDocument();
+    unmount();
+    wrap(<DeleteLeagueDialog leagueId="L1" leagueName="Office 2026" />);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Delete league" }),
+    );
+    expect(screen.queryByText(/The draft has started/)).toBeNull();
+  });
+
   it("keeps Delete disabled until the name is typed, in any case", async () => {
     const fetchMock = reply(200, { ok: true });
     vi.stubGlobal("fetch", fetchMock);

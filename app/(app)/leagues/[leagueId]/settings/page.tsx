@@ -85,11 +85,13 @@ export default async function LeagueSettingsPage({
             candidates={members.filter((m) => m.userId !== user.id)}
           />
         </Panel>
-        {preDraft ? (
-          <Panel title="Danger zone">
-            <DeleteLeagueDialog leagueId={leagueId} leagueName={league.name} />
-          </Panel>
-        ) : null}
+        <Panel title="Danger zone">
+          <DeleteLeagueDialog
+            leagueId={leagueId}
+            leagueName={league.name}
+            status={league.status}
+          />
+        </Panel>
       </div>
     </>
   );

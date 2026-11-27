@@ -6,7 +6,9 @@ for behavior. Specs refine them but should not contradict them. Items marked
 
 ## Leagues And Membership
 
-- Only the admin can delete a league, and only during `pre_draft`.
+- Only the admin can delete a league, in any status, by typing its name. After the
+  start the confirmation warns that everyone's picks (and boards) go too. This lets a
+  group run a practice draft in a throwaway league before the real one.
 - Anyone signed in can create a league and becomes its admin. The admin also
   plays: they are a member and count in `N`.
 - Others join through an invite link or join code and are regular players.

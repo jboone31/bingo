@@ -139,7 +139,8 @@ system light/dark setting. See `.kiro/specs/design-system/`.
 
 Decided: the admin also plays, so they count in `N`. See `draft-rules.md`.
 
-Decided: the admin can delete a league only while `pre_draft`, by typing its name.
+Decided: the admin can delete a league by typing its name. (Originally `pre_draft`
+only; changed after F6 to any status, so a practice draft can be thrown away.)
 The admin can remove members pre-draft. Join codes are 8 characters with no attempt
 limit for now. See `.kiro/specs/leagues/`.
 

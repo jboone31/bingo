@@ -179,7 +179,7 @@ describe("canDelete", () => {
     );
   });
 
-  it("only the admin, only pre_draft", () => {
+  it("only the admin, in any status", () => {
     fc.assert(
       fc.property(status, role, (s, r) => {
         const result = canDelete({
@@ -188,7 +188,7 @@ describe("canDelete", () => {
           leagueName: "X",
           confirmName: "X",
         });
-        expect(result.ok).toBe(s === "pre_draft" && r === "admin");
+        expect(result.ok).toBe(r === "admin");
       }),
       { numRuns: 100 },
     );

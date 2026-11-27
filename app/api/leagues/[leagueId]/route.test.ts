@@ -75,9 +75,18 @@ describe("DELETE /api/leagues/[leagueId]", () => {
     expect(q.deleteLeague).not.toHaveBeenCalled();
   });
 
-  it("409 after the draft starts", async () => {
+  it("deletes a league whose draft has started, or finished", async () => {
+    for (const status of ["drafting", "in_progress"]) {
+      q.deleteLeague.mockClear();
+      q.lockLeagueById.mockResolvedValue(league({ status }));
+      expect(await (await call()).json()).toEqual({ ok: true });
+      expect(q.deleteLeague).toHaveBeenCalledWith({}, LEAGUE_ID);
+    }
+  });
+
+  it("still needs the typed name after the start", async () => {
     q.lockLeagueById.mockResolvedValue(league({ status: "drafting" }));
-    expect((await call()).status).toBe(409);
+    expect((await call({ confirmName: "Office" })).status).toBe(400);
     expect(q.deleteLeague).not.toHaveBeenCalled();
   });
 });

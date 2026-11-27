@@ -88,8 +88,9 @@ export function canTransfer(input: {
 }
 
 /**
- * Deleting: admin only, only while pre_draft, and the typed name must match. Case
- * is ignored because headings display league names in capitals.
+ * Deleting: admin only, in any status (so a practice draft can be thrown away), and
+ * the typed name must match. Case is ignored because headings display league names
+ * in capitals. `status` is kept in the input so the rule can depend on it again.
  */
 export function canDelete(input: {
   status: LeagueStatus;
@@ -98,7 +99,6 @@ export function canDelete(input: {
   leagueName: string;
 }): RuleResult {
   if (input.actorRole !== "admin") return notAdmin();
-  if (input.status !== "pre_draft") return notPreDraft();
   if (!namesMatch(input.confirmName, input.leagueName)) {
     return deny("confirmation_mismatch", 400);
   }

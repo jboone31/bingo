@@ -8,15 +8,21 @@ import { TextField } from "@/components/ui/TextField";
 import { useToast } from "@/components/ui/Toast";
 import { reasonMessage } from "@/lib/leagues/messages";
 import { namesMatch } from "@/lib/leagues/rules";
+import type { LeagueStatus } from "@/lib/leagues/types";
 import styles from "./ConfirmAction.module.css";
 
-/** Delete needs the league name typed exactly. */
+/**
+ * Delete needs the league name typed exactly. Allowed in any status; once the draft
+ * has started, the dialog says what else is lost.
+ */
 export function DeleteLeagueDialog({
   leagueId,
   leagueName,
+  status = "pre_draft",
 }: {
   leagueId: string;
   leagueName: string;
+  status?: LeagueStatus;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -62,6 +68,13 @@ export function DeleteLeagueDialog({
         <p>
           This removes the league and all of its players. It cannot be undone.
         </p>
+        {status !== "pre_draft" ? (
+          <p>
+            <strong>The draft has started.</strong> Every player&apos;s picks
+            {status === "in_progress" ? " and boards" : ""} will be deleted too,
+            for everyone in the league.
+          </p>
+        ) : null}
         <p>
           To confirm, type the league name: <strong>{leagueName}</strong>
         </p>
