@@ -78,6 +78,9 @@ These each caused a bug. The rules are in `conventions.md`; this is the short li
   `getSql()` never return. Batch parallel work in tests to 5.
 - **`on delete set null` is an UPDATE** to triggers, so an immutability trigger must
   allow it (migration 0009).
+- **The live `pg_cron` backstop settles drafts every 5 seconds**, including test
+  leagues. Integration tests that expire deadlines must assert the resulting state, not
+  how many picks one `settle_league` call made.
 - **The server connects as the database owner**, which bypasses RLS. Server code (and
   tests) can read any player's queue. The browser cannot.
 - **Hot reload can serve a stale route** in `next dev`. Unexpected route errors print
